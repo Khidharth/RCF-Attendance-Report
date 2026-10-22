@@ -4,9 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Attendance Report | RCF – Redeem Christian Fellowship</title>
-  <meta name="description" content="Register with RCF, House of Revealed God's Glory." />
+  <meta name="description" content="Welcome to RCF, House of Revealed God's Glory. Register your attendance." />
 
-  <!-- Runs before the page paints, so the saved theme is applied with no flash. -->
+  <!-- Applies the saved theme before the page paints, so there is no flash of the wrong theme. -->
   <script>
     (function () {
       var theme = "dark";
@@ -17,127 +17,189 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <!-- ============================ HEADER + NAVIGATION ============================ -->
   <header class="site-header">
     <div class="container header-inner">
-      <div class="brand">
-        <span class="brand-mark">RCF</span>
+      <a class="brand" href="#home" aria-label="RCF Attendance Report, home">
+        <span class="brand-mark" aria-hidden="true">RCF</span>
         <span class="brand-text">
           <span class="brand-name">Redeem Christian Fellowship</span>
           <span class="brand-house">House of Revealed God's Glory</span>
         </span>
-      </div>
+      </a>
+
       <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Switch to light mode" aria-pressed="false">
         <span id="theme-toggle-icon" aria-hidden="true">☀</span>
         <span id="theme-toggle-text">Light</span>
       </button>
+
+      <nav class="main-nav" aria-label="Main">
+        <a href="#home" data-nav="home">Home</a>
+        <a href="#register" data-nav="register">Register</a>
+      </nav>
     </div>
   </header>
 
-  <main class="container">
-    <!-- Welcome -->
-    <section class="hero card" id="welcome">
-      <p class="eyebrow">Attendance Report</p>
-      <h1>Welcome to RCF</h1>
-      <p class="lead">
-        We're glad you're here. Whether you're visiting for the first time, joining us in faith,
-        or already part of our church family, there's a place for you here.
-      </p>
+  <main id="main" class="container">
+
+    <!-- ============================ VIEW 1: WELCOME ============================ -->
+    <section id="view-home" class="view" data-title="Attendance Report | RCF – Redeem Christian Fellowship" aria-labelledby="home-title">
+      <div class="hero">
+        <div class="emblem" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10.5 2h3v6.5H20v3h-6.5V22h-3V11.5H4v-3h6.5z"/></svg>
+        </div>
+        <p class="eyebrow">Attendance Report</p>
+        <h1 id="home-title" tabindex="-1">Welcome to RCF</h1>
+        <p class="house-tag">House of Revealed God's Glory</p>
+        <p class="lead">
+          We're glad you're here. Whether you're visiting for the first time, joining us in faith,
+          or already part of our church family, there's a place for you here.
+        </p>
+      </div>
+
+      <ul class="welcome-cards">
+        <li class="welcome-card">
+          <span class="welcome-card-title">First time with us?</span>
+          <span>You are most welcome. We're so glad you came.</span>
+        </li>
+        <li class="welcome-card">
+          <span class="welcome-card-title">New in the faith?</span>
+          <span>Celebrate with us as you begin your walk with Christ.</span>
+        </li>
+        <li class="welcome-card">
+          <span class="welcome-card-title">Part of the family?</span>
+          <span>Good to see you again. Let's worship together.</span>
+        </li>
+      </ul>
+
       <blockquote class="verse">
-        “For where two or three gather in my name, there am I with them.”
+        <p>“For where two or three gather in my name, there am I with them.”</p>
         <cite>— Matthew 18:20</cite>
       </blockquote>
-      <a href="#register-section" id="register-now" class="btn btn-primary">Register Now</a>
+
+      <div class="cta">
+        <a href="#register" id="register-now" class="btn btn-primary btn-lg">Register Now <span aria-hidden="true">→</span></a>
+        <p class="muted cta-note">It only takes a moment.</p>
+      </div>
     </section>
 
-    <!-- Registration form -->
-    <section class="card" id="register-section" aria-labelledby="register-heading">
-      <h2 id="register-heading">Registration</h2>
+    <!-- ============================ VIEW 2: REGISTRATION ============================ -->
+    <section id="view-register" class="view" data-title="Registration | RCF Attendance Report" aria-labelledby="register-title" hidden>
+      <a class="back-link" href="#home"><span aria-hidden="true">←</span> Back to welcome</a>
 
-      <div id="form-error" class="alert alert-error" role="alert" hidden></div>
+      <div class="panel">
+        <header class="panel-head">
+          <p class="eyebrow">Attendance Report</p>
+          <h2 id="register-title" tabindex="-1">Registration</h2>
+          <p class="muted">Please tell us a little about yourself. Fields marked <span class="req" aria-hidden="true">*</span> are required.</p>
+          <p class="date-pill"><span class="date-label">Date</span> <output id="reg-date" for="registration-form"></output></p>
+        </header>
 
-      <form id="registration-form" novalidate>
-        <div class="field">
-          <label for="reg-date">Registration Date</label>
-          <input id="reg-date" type="text" readonly aria-describedby="reg-date-help" />
-          <small id="reg-date-help" class="help">Filled in automatically.</small>
-        </div>
+        <div id="form-error" class="alert alert-error" role="alert" hidden></div>
 
-        <div class="field">
-          <label for="full-name">Full Name <span class="req" aria-hidden="true">*</span></label>
-          <input id="full-name" name="full_name" type="text" autocomplete="name" maxlength="120" required />
-          <small class="field-error" id="full-name-error" hidden></small>
-        </div>
+        <form id="registration-form" novalidate>
+          <div class="form-grid">
+            <div class="field" data-field="full_name">
+              <label for="full-name">Full Name <span class="req" aria-hidden="true">*</span></label>
+              <input id="full-name" name="full_name" type="text" autocomplete="name" maxlength="120" required aria-describedby="full-name-error" />
+              <small class="field-error" id="full-name-error" hidden></small>
+            </div>
 
-        <div class="field">
-          <label for="level">Level <span class="req" aria-hidden="true">*</span></label>
-          <select id="level" name="level" required>
-            <option value="">Select your level</option>
-          </select>
-          <small class="field-error" id="level-error" hidden></small>
-        </div>
+            <div class="field" data-field="phone">
+              <label for="phone">Phone Number <span class="optional">(optional)</span></label>
+              <input id="phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" maxlength="25" placeholder="e.g. 0801 234 5678" aria-describedby="phone-error" />
+              <small class="field-error" id="phone-error" hidden></small>
+            </div>
 
-        <div class="field">
-          <label for="phone">Phone Number <span class="optional">(optional)</span></label>
-          <input id="phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" maxlength="25" placeholder="e.g. 0801 234 5678" />
-          <small class="field-error" id="phone-error" hidden></small>
-        </div>
+            <div class="field" data-field="level">
+              <label for="level">Level <span class="req" aria-hidden="true">*</span></label>
+              <select id="level" name="level" required aria-describedby="level-error">
+                <option value="">Select your level</option>
+              </select>
+              <small class="field-error" id="level-error" hidden></small>
+            </div>
 
-        <div class="field">
-          <label for="department">Department <span class="req" aria-hidden="true">*</span></label>
-          <input id="department" name="department" type="text" maxlength="120" required />
-          <small class="field-error" id="department-error" hidden></small>
-        </div>
+            <div class="field" data-field="department">
+              <label for="department">Department <span class="req" aria-hidden="true">*</span></label>
+              <input id="department" name="department" type="text" maxlength="120" required aria-describedby="department-error" />
+              <small class="field-error" id="department-error" hidden></small>
+            </div>
+          </div>
 
-        <div class="field">
-          <label for="gender">Gender <span class="req" aria-hidden="true">*</span></label>
-          <select id="gender" name="gender" required>
-            <option value="">Select</option>
-            <option value="Male">Male</option>
-            <option value="Female">Female</option>
-            <option value="Prefer not to say">Prefer not to say</option>
-          </select>
-          <small class="field-error" id="gender-error" hidden></small>
-        </div>
+          <fieldset class="field" data-field="gender">
+            <legend>Gender <span class="req" aria-hidden="true">*</span></legend>
+            <div class="choice-grid">
+              <label class="choice"><input type="radio" name="gender" value="Male" /><span>Male</span></label>
+              <label class="choice"><input type="radio" name="gender" value="Female" /><span>Female</span></label>
+              <label class="choice"><input type="radio" name="gender" value="Prefer not to say" /><span>Prefer not to say</span></label>
+            </div>
+            <small class="field-error" id="gender-error" hidden></small>
+          </fieldset>
 
-        <div class="field">
-          <label for="category">Registration Category <span class="req" aria-hidden="true">*</span></label>
-          <select id="category" name="registration_category" required>
-            <option value="">Select</option>
-            <option value="First Timer">First Timer</option>
-            <option value="New Convert">New Convert</option>
-            <option value="Member">Member</option>
-          </select>
-          <small class="field-error" id="category-error" hidden></small>
-        </div>
+          <fieldset class="field" data-field="category">
+            <legend>Registration Category <span class="req" aria-hidden="true">*</span></legend>
+            <div class="choice-grid">
+              <label class="choice"><input type="radio" name="registration_category" value="First Timer" /><span>First Timer</span></label>
+              <label class="choice"><input type="radio" name="registration_category" value="New Convert" /><span>New Convert</span></label>
+              <label class="choice"><input type="radio" name="registration_category" value="Member" /><span>Member</span></label>
+            </div>
+            <small class="field-error" id="category-error" hidden></small>
+          </fieldset>
 
-        <button id="submit-btn" type="submit" class="btn btn-primary btn-block">Submit Registration</button>
-      </form>
+          <button id="submit-btn" type="submit" class="btn btn-primary btn-lg btn-block">Submit Registration</button>
+        </form>
 
-      <p class="privacy">
-        <strong>Privacy:</strong> We collect these details only to welcome you and keep church attendance
-        records. They are visible only to authorised RCF workers and are never shared publicly or sold.
-      </p>
+        <p class="privacy-note">
+          <strong>Your privacy:</strong> We use these details only to welcome you and keep church attendance
+          records. <button type="button" class="link-btn" data-open-privacy>Read our privacy notice</button>
+        </p>
+      </div>
     </section>
 
-    <!-- Confirmation (shown only after the database confirms the save) -->
-    <section class="card success" id="success-section" aria-live="polite" hidden>
-      <h2>Registration Successful!</h2>
-      <p>
-        Thank you for worshipping with RCF, House of Revealed God's Glory. We're delighted to have you
-        with us. Enjoy the rest of the service!
-      </p>
-      <button id="register-another" type="button" class="btn btn-secondary">Register another person</button>
+    <!-- ============================ VIEW 3: CONFIRMATION ============================ -->
+    <section id="view-success" class="view" data-title="Registration Successful | RCF Attendance Report" aria-labelledby="success-title" hidden>
+      <div class="panel success">
+        <div class="check" aria-hidden="true">✓</div>
+        <h2 id="success-title" tabindex="-1">Registration Successful!</h2>
+        <p>
+          Thank you for worshipping with RCF, House of Revealed God's Glory. We're delighted to have you
+          with us. Enjoy the rest of the service!
+        </p>
+        <div class="actions">
+          <a href="#register" class="btn btn-secondary">Register another person</a>
+          <a href="#home" class="btn btn-ghost">Back to welcome</a>
+        </div>
+      </div>
     </section>
   </main>
 
+  <!-- ============================ FOOTER ============================ -->
   <footer class="site-footer">
     <div class="container">
       <p class="footer-values">Worship · Fellowship · Discipleship · Impact</p>
       <p>© <span id="year"></span> RCF Attendance Report. All rights reserved.</p>
+      <p><button type="button" class="link-btn" data-open-privacy>Privacy</button></p>
     </div>
   </footer>
 
-  <!-- Supabase client v2 from jsDelivr. Loaded before our own scripts. -->
+  <!-- ============================ PRIVACY DIALOG ============================ -->
+  <dialog id="privacy-dialog" aria-labelledby="privacy-title">
+    <h2 id="privacy-title">Privacy Notice</h2>
+    <p>
+      When you register, we collect your name, level, department, gender, registration category and,
+      if you choose, your phone number.
+    </p>
+    <p>
+      We use this only to welcome you and to keep accurate church attendance records. Your details are
+      visible only to authorised RCF workers, are not shown publicly, and are never sold.
+    </p>
+    <p>To have your record corrected or removed, please speak to a church worker.</p>
+    <form method="dialog"><button class="btn btn-primary" autofocus>Close</button></form>
+  </dialog>
+
+  <!-- Supabase client v2 from jsDelivr, then our config, then our script. -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
   <script src="script.js"></script>
