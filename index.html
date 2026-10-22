@@ -1,0 +1,275 @@
+
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <meta
+    name="description"
+    content="RCF Attendance Report — Redeem Christian Fellowship, House of Revealed God's Glory."
+  >
+
+  <meta name="theme-color" content="#101827">
+
+  <title>RCF Attendance Report</title>
+
+  <link rel="stylesheet" href="style.css">
+  <script src="script.js" defer></script>
+</head>
+
+<body>
+
+  <!-- HEADER -->
+  <header class="site-header">
+
+    <a href="#" class="brand" aria-label="RCF Home">
+      <div class="brand-mark">RCF</div>
+
+      <div class="brand-text">
+        <h1>RCF</h1>
+        <p class="fellowship-name">Redeem Christian Fellowship</p>
+        <p class="house-name">House of Revealed God's Glory</p>
+      </div>
+    </a>
+
+    <button
+      type="button"
+      id="themeToggle"
+      class="theme-toggle"
+      aria-label="Switch colour theme"
+      aria-pressed="false"
+    >
+      <span id="themeIcon" aria-hidden="true">☀</span>
+      <span id="themeLabel">Light mode</span>
+    </button>
+
+  </header>
+
+  <main>
+
+    <!-- WELCOME SECTION -->
+    <section class="welcome-section">
+
+      <p class="eyebrow">
+        WORSHIP · FELLOWSHIP · DISCIPLESHIP
+      </p>
+
+      <h2>Welcome to RCF</h2>
+
+      <p class="welcome-description">
+        We're glad you're here. Whether you're visiting for
+        the first time, joining us in faith, or already part
+        of our church family, there's a place for you here.
+      </p>
+
+      <div class="scripture">
+        <p>
+          "For where two or three gather in my name,
+          there am I with them."
+        </p>
+
+        <span>Matthew 18:20</span>
+      </div>
+
+      <a href="#registration" class="primary-button">
+        Register Now <span aria-hidden="true">→</span>
+      </a>
+
+      <p class="welcome-note">
+        It only takes a minute.
+      </p>
+
+    </section>
+
+    <!-- REGISTRATION SECTION -->
+    <section id="registration" class="registration-section">
+
+      <div class="section-heading">
+        <p class="eyebrow">VISITOR REGISTRATION</p>
+
+        <h2>Let's get to know you</h2>
+
+        <p>
+          Please provide your details below to complete
+          your registration.
+        </p>
+      </div>
+
+      <form id="registrationForm">
+
+        <!-- REGISTRATION DATE -->
+        <div class="form-group">
+          <label for="registrationDate">
+            Registration Date
+          </label>
+
+          <input
+            type="date"
+            id="registrationDate"
+            name="registrationDate"
+            readonly
+            required
+          >
+
+          <small>
+            Your registration date is selected automatically.
+          </small>
+        </div>
+
+        <!-- FULL NAME -->
+        <div class="form-group">
+          <label for="fullName">Full Name</label>
+
+          <input
+            type="text"
+            id="fullName"
+            name="fullName"
+            placeholder="Enter your full name"
+            autocomplete="name"
+            maxlength="120"
+            required
+          >
+        </div>
+
+        <!-- LEVEL AND PHONE NUMBER -->
+        <div class="form-row">
+
+          <div class="form-group">
+            <label for="level">Level</label>
+
+            <select
+              id="level"
+              name="level"
+              required
+            >
+              <option value="">Select level</option>
+              <option value="100 Level">100 Level</option>
+              <option value="200 Level">200 Level</option>
+              <option value="300 Level">300 Level</option>
+              <option value="400 Level">400 Level</option>
+              <option value="500 Level">500 Level</option>
+              <option value="Postgraduate">Postgraduate</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="phoneNumber">Phone Number</label>
+
+            <input
+              type="tel"
+              id="phoneNumber"
+              name="phoneNumber"
+              placeholder="Enter phone number"
+              autocomplete="tel"
+              maxlength="20"
+            >
+          </div>
+
+        </div>
+
+        <!-- DEPARTMENT: FREE TEXT INPUT -->
+        <div class="form-group">
+          <label for="department">Department</label>
+
+          <input
+            type="text"
+            id="department"
+            name="department"
+            placeholder="Enter your department"
+            maxlength="100"
+            required
+          >
+        </div>
+
+        <!-- GENDER -->
+        <div class="form-group">
+          <label for="gender">Gender</label>
+
+          <select
+            id="gender"
+            name="gender"
+            required
+          >
+            <option value="">Select gender</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+            <option value="Prefer not to say">
+              Prefer not to say
+            </option>
+          </select>
+        </div>
+
+        <!-- REGISTRATION CATEGORY -->
+        <div class="form-group">
+          <label for="category">
+            I am registering as
+          </label>
+
+          <select
+            id="category"
+            name="category"
+            required
+          >
+            <option value="">Select category</option>
+            <option value="First Timer">First Timer</option>
+            <option value="New Convert">New Convert</option>
+            <option value="Member">Member</option>
+          </select>
+
+          <small>
+            Please select the option that best describes you.
+          </small>
+        </div>
+
+        <!-- SUBMIT BUTTON -->
+        <button type="submit" class="submit-button">
+          Complete Registration
+          <span aria-hidden="true">→</span>
+        </button>
+
+        <p class="privacy-note">
+          Your information is collected for church registration
+          and attendance purposes.
+        </p>
+
+      </form>
+
+      <!-- SUCCESS MESSAGE -->
+      <section
+        id="successMessage"
+        class="success-message"
+        aria-live="polite"
+        hidden
+      >
+      </section>
+
+    </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="site-footer">
+
+    <div class="footer-brand">
+      <strong>RCF</strong>
+
+      <span>Redeem Christian Fellowship</span>
+
+      <em>House of Revealed God's Glory</em>
+    </div>
+
+    <p class="footer-motto">
+      Worship · Fellowship · Discipleship · Impact
+    </p>
+
+    <p class="copyright">
+      &copy; <span id="footerYear">2026</span>
+      RCF Attendance Report. All rights reserved.
+    </p>
+
+  </footer>
+
+</body>
+</html>
