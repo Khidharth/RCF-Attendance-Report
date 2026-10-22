@@ -1,7 +1,10 @@
 // script.js: everything the public page does, in one file.
 //   Part 1: dark/light theme toggle
-//   Part 2: registration form (validation + saving through Supabase)
+//   Part 2: screen navigation (Welcome -> Registration -> Confirmation)
+//   Part 3: registration form (validation + saving through Supabase)
 // Settings you edit live in supabase-config.js, which loads before this file.
+
+var config = window.RCF_CONFIG || {};
 
 // ======================================================================================
 // PART 1: THEME TOGGLE
@@ -11,7 +14,6 @@
 (function () {
   var root = document.documentElement;
   var button = document.getElementById("theme-toggle");
-  if (!button) return;
   var icon = document.getElementById("theme-toggle-icon");
   var text = document.getElementById("theme-toggle-text");
 
@@ -20,8 +22,8 @@
     // The button always names the mode you will switch TO.
     button.setAttribute("aria-label", isDark ? "Switch to light mode" : "Switch to dark mode");
     button.setAttribute("aria-pressed", String(!isDark));
-    if (icon) icon.textContent = isDark ? "☀" : "☾";
-    if (text) text.textContent = isDark ? "Light" : "Dark";
+    icon.textContent = isDark ? "☀" : "☾";
+    text.textContent = isDark ? "Light" : "Dark";
   }
 
   render(root.getAttribute("data-theme") || "dark");
@@ -35,24 +37,76 @@
 })();
 
 // ======================================================================================
-// PART 2: REGISTRATION FORM
+// PART 2: SCREEN NAVIGATION
+// The page has three screens. The URL hash chooses which one is visible:
+//   #home (default), #register, #success
+// The registration form is hidden until the visitor presses "Register Now".
+// The Back button of the browser works because each screen is its own hash.
+// ======================================================================================
+var justRegistered = false; // #success is only allowed right after a saved registration
+
+(function () {
+  var views = {
+    home: document.getElementById("view-home"),
+    register: document.getElementById("view-register"),
+    success: document.getElementById("view-success"),
+  };
+  var navLinks = document.querySelectorAll("[data-nav]");
+
+  function currentRoute() {
+    var name = window.location.hash.replace("#", "");
+    if (!views[name]) return "home";
+    if (name === "success" && !justRegistered) return "home"; // can't open the confirmation directly
+    return name;
+  }
+
+  function show(route, moveFocus) {
+    Object.keys(views).forEach(function (name) {
+      views[name].hidden = name !== route;
+    });
+    navLinks.forEach(function (link) {
+      if (link.getAttribute("data-nav") === route) link.setAttribute("aria-current", "page");
+      else link.removeAttribute("aria-current");
+    });
+    document.title = views[route].getAttribute("data-title");
+    if (route !== "success") justRegistered = false;
+
+    window.scrollTo(0, 0);
+    if (moveFocus) {
+      // Moving focus to the new heading lets screen readers announce the screen change.
+      var heading = views[route].querySelector("h1, h2");
+      if (heading) heading.focus({ preventScroll: true });
+    }
+  }
+
+  window.addEventListener("hashchange", function () { show(currentRoute(), true); });
+
+  // Used by Part 3 to open the confirmation screen.
+  window.rcfGoTo = function (name) {
+    if (window.location.hash === "#" + name) show(name, true);
+    else window.location.hash = "#" + name;
+  };
+
+  // If someone opens the page at #success directly, tidy the URL back to #home.
+  if (window.location.hash === "#success") history.replaceState(null, "", "#home");
+  show(currentRoute(), false);
+})();
+
+// ======================================================================================
+// PART 3: REGISTRATION FORM
 // Talks to Supabase ONLY through the register_member() database function
 // (see supabase/schema.sql).
 // ======================================================================================
 (function () {
-  var config = window.RCF_CONFIG || {};
   var form = document.getElementById("registration-form");
   var submitBtn = document.getElementById("submit-btn");
   var formError = document.getElementById("form-error");
-  var successSection = document.getElementById("success-section");
-  var registerSection = document.getElementById("register-section");
-  var welcomeSection = document.getElementById("welcome");
 
-  // ---- Small setup: year, date display, level options ---------------------------------
+  // ---- Small setup: year, date display, level options, privacy dialog ----------------
   document.getElementById("year").textContent = new Date().getFullYear();
 
   // Display only. The real saved date is set by the database in the Africa/Lagos timezone.
-  document.getElementById("reg-date").value = new Intl.DateTimeFormat("en-GB", {
+  document.getElementById("reg-date").textContent = new Intl.DateTimeFormat("en-GB", {
     dateStyle: "full",
     timeZone: config.TIMEZONE || "Africa/Lagos",
   }).format(new Date());
@@ -61,11 +115,19 @@
   (config.LEVELS || []).forEach(function (levelName) {
     var option = document.createElement("option");
     option.value = levelName;
-    option.textContent = levelName; // textContent = safe, never inserts HTML
+    option.textContent = levelName; // textContent is safe: it never inserts HTML
     levelSelect.appendChild(option);
   });
 
-  // ---- Supabase client ----------------------------------------------------------------
+  var privacyDialog = document.getElementById("privacy-dialog");
+  document.querySelectorAll("[data-open-privacy]").forEach(function (btn) {
+    btn.addEventListener("click", function () { privacyDialog.showModal(); });
+  });
+  privacyDialog.addEventListener("click", function (e) {
+    if (e.target === privacyDialog) privacyDialog.close(); // click on the dark backdrop closes it
+  });
+
+  // ---- Supabase client ---------------------------------------------------------------
   var configured =
     config.SUPABASE_URL && config.SUPABASE_ANON_KEY &&
     config.SUPABASE_URL.indexOf("PASTE_") !== 0 && config.SUPABASE_ANON_KEY.indexOf("PASTE_") !== 0;
@@ -75,57 +137,60 @@
     client = window.supabase.createClient(config.SUPABASE_URL, config.SUPABASE_ANON_KEY);
   }
 
-  // ---- One token per form. A double click or retry reuses it, so no duplicate rows. ---
+  // ---- One token per form. A double click or retry reuses it, so no duplicate rows. --
   var submissionToken = crypto.randomUUID();
   var isSubmitting = false;
 
-  // ---- Validation ---------------------------------------------------------------------
-  var fields = {
-    full_name: { input: "full-name", error: "full-name-error" },
-    level: { input: "level", error: "level-error" },
-    phone: { input: "phone", error: "phone-error" },
-    department: { input: "department", error: "department-error" },
-    gender: { input: "gender", error: "gender-error" },
-    category: { input: "category", error: "category-error" },
+  // ---- Validation --------------------------------------------------------------------
+  var fieldKeys = ["full_name", "phone", "level", "department", "gender", "category"];
+  var errorIds = {
+    full_name: "full-name-error", phone: "phone-error", level: "level-error",
+    department: "department-error", gender: "gender-error", category: "category-error",
   };
 
+  function wrapperFor(key) { return form.querySelector('[data-field="' + key + '"]'); }
+
   function setFieldError(key, message) {
-    var el = document.getElementById(fields[key].error);
-    var input = document.getElementById(fields[key].input);
+    var wrapper = wrapperFor(key);
+    var errorEl = document.getElementById(errorIds[key]);
+    var control = wrapper.querySelector("input[type='text'], input[type='tel'], select");
     if (message) {
-      el.textContent = message;
-      el.hidden = false;
-      input.setAttribute("aria-invalid", "true");
+      errorEl.textContent = message;
+      errorEl.hidden = false;
+      wrapper.classList.add("has-error");
+      if (control) control.setAttribute("aria-invalid", "true");
     } else {
-      el.textContent = "";
-      el.hidden = true;
-      input.removeAttribute("aria-invalid");
+      errorEl.textContent = "";
+      errorEl.hidden = true;
+      wrapper.classList.remove("has-error");
+      if (control) control.removeAttribute("aria-invalid");
     }
+  }
+
+  function checkedValue(name) {
+    var checked = form.querySelector('input[name="' + name + '"]:checked');
+    return checked ? checked.value : "";
   }
 
   function readValues() {
     return {
       full_name: document.getElementById("full-name").value.trim(),
-      level: document.getElementById("level").value,
       phone: document.getElementById("phone").value.trim(),
+      level: document.getElementById("level").value,
       department: document.getElementById("department").value.trim(),
-      gender: document.getElementById("gender").value,
-      category: document.getElementById("category").value,
+      gender: checkedValue("gender"),
+      category: checkedValue("registration_category"),
     };
   }
 
-  // Returns true if everything is valid. The database checks the same rules again.
+  // Returns the key of the first invalid field, or null when everything is fine.
+  // The database checks the same rules again, so this is for friendliness, not security.
   function validate(v) {
-    var ok = true;
-    function fail(key, msg) { setFieldError(key, msg); ok = false; }
-    Object.keys(fields).forEach(function (k) { setFieldError(k, ""); });
+    var firstBad = null;
+    function fail(key, msg) { setFieldError(key, msg); if (!firstBad) firstBad = key; }
+    fieldKeys.forEach(function (k) { setFieldError(k, ""); });
 
     if (v.full_name.length < 2) fail("full_name", "Please enter your full name.");
-    if (!v.level) fail("level", "Please choose your level.");
-    if (!v.department) fail("department", "Please enter your department.");
-    if (!v.gender) fail("gender", "Please choose an option.");
-    if (!v.category) fail("category", "Please choose a category.");
-
     if (v.phone) {
       // Accept spaces, dashes, brackets and a leading +; require at least 7 digits.
       var digits = v.phone.replace(/\D/g, "");
@@ -133,7 +198,19 @@
         fail("phone", "Please enter a valid phone number, or leave it blank.");
       }
     }
-    return ok;
+    if (!v.level) fail("level", "Please choose your level.");
+    if (!v.department) fail("department", "Please enter your department.");
+    if (!v.gender) fail("gender", "Please choose an option.");
+    if (!v.category) fail("category", "Please choose a category.");
+    return firstBad;
+  }
+
+  // Clear a field's error as soon as the visitor changes it.
+  form.addEventListener("input", clearErrorFor);
+  form.addEventListener("change", clearErrorFor);
+  function clearErrorFor(event) {
+    var wrapper = event.target.closest("[data-field]");
+    if (wrapper && wrapper.classList.contains("has-error")) setFieldError(wrapper.getAttribute("data-field"), "");
   }
 
   function showFormError(message) {
@@ -148,16 +225,17 @@
     submitBtn.textContent = busy ? "Submitting…" : "Submit Registration";
   }
 
-  // ---- Submit -------------------------------------------------------------------------
+  // ---- Submit ------------------------------------------------------------------------
   form.addEventListener("submit", async function (event) {
     event.preventDefault();
     if (isSubmitting) return; // ignore repeated clicks
     formError.hidden = true;
 
     var values = readValues();
-    if (!validate(values)) {
-      var firstBad = form.querySelector("[aria-invalid='true']");
-      if (firstBad) firstBad.focus();
+    var badKey = validate(values);
+    if (badKey) {
+      var firstControl = wrapperFor(badKey).querySelector("input, select");
+      if (firstControl) firstControl.focus();
       return;
     }
 
@@ -191,22 +269,13 @@
 
       form.reset();
       submissionToken = crypto.randomUUID(); // fresh token for the next person
-      registerSection.hidden = true;
-      welcomeSection.hidden = true;
-      successSection.hidden = false;
-      successSection.scrollIntoView({ behavior: "smooth", block: "start" });
       setBusy(false);
+      justRegistered = true;
+      window.rcfGoTo("success");
     } catch (err) {
       console.error("Registration error:", err);
       showFormError("Something went wrong while saving. Please try again.");
       setBusy(false);
     }
-  });
-
-  document.getElementById("register-another").addEventListener("click", function () {
-    successSection.hidden = true;
-    welcomeSection.hidden = false;
-    registerSection.hidden = false;
-    window.scrollTo({ top: 0, behavior: "smooth" });
   });
 })();
