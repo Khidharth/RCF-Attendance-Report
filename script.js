@@ -1,342 +1,212 @@
-"use strict";
+// script.js: everything the public page does, in one file.
+//   Part 1: dark/light theme toggle
+//   Part 2: registration form (validation + saving through Supabase)
+// Settings you edit live in supabase-config.js, which loads before this file.
 
-// =====================================
-// RCF ATTENDANCE REPORT
-// Registration + Dark/Light Mode
-// =====================================
+// ======================================================================================
+// PART 1: THEME TOGGLE
+// The <head> of index.html already applied the saved theme before the page painted.
+// This part only wires up the button.
+// ======================================================================================
+(function () {
+  var root = document.documentElement;
+  var button = document.getElementById("theme-toggle");
+  if (!button) return;
+  var icon = document.getElementById("theme-toggle-icon");
+  var text = document.getElementById("theme-toggle-text");
 
-const REGISTRATION_KEY = "rcfRegistrations";
-const THEME_KEY = "rcfTheme";
-
-// =====================================
-// 1. GET TODAY'S DATE
-// =====================================
-
-function getTodayDate() {
-  const today = new Date();
-  const year = today.getFullYear();
-  const month = String(today.getMonth() + 1).padStart(2, "0");
-  const day = String(today.getDate()).padStart(2, "0");
-
-  return `${year}-${month}-${day}`;
-}
-
-function setRegistrationDate() {
-  const dateInput = document.getElementById("registrationDate");
-
-  if (dateInput) {
-    dateInput.value = getTodayDate();
-  }
-}
-
-// =====================================
-// 2. UPDATE FOOTER YEAR
-// =====================================
-
-function setFooterYear() {
-  const footerYear = document.getElementById("footerYear");
-
-  if (footerYear) {
-    footerYear.textContent = new Date().getFullYear();
-  }
-}
-
-// =====================================
-// 3. DARK AND LIGHT MODE
-// =====================================
-
-function applyTheme(theme) {
-  const html = document.documentElement;
-  const themeIcon = document.getElementById("themeIcon");
-  const themeLabel = document.getElementById("themeLabel");
-  const themeToggle = document.getElementById("themeToggle");
-  const themeColor = document.querySelector('meta[name="theme-color"]');
-
-  // Only allow the two supported themes.
-  const selectedTheme = theme === "light" ? "light" : "dark";
-
-  html.setAttribute("data-theme", selectedTheme);
-
-  if (themeIcon) {
-    themeIcon.textContent = selectedTheme === "dark" ? "☀" : "☾";
+  function render(theme) {
+    var isDark = theme === "dark";
+    // The button always names the mode you will switch TO.
+    button.setAttribute("aria-label", isDark ? "Switch to light mode" : "Switch to dark mode");
+    button.setAttribute("aria-pressed", String(!isDark));
+    if (icon) icon.textContent = isDark ? "☀" : "☾";
+    if (text) text.textContent = isDark ? "Light" : "Dark";
   }
 
-  if (themeLabel) {
-    themeLabel.textContent =
-      selectedTheme === "dark" ? "Light mode" : "Dark mode";
-  }
+  render(root.getAttribute("data-theme") || "dark");
 
-  if (themeToggle) {
-    themeToggle.setAttribute(
-      "aria-pressed",
-      String(selectedTheme === "light")
-    );
-
-    themeToggle.setAttribute(
-      "aria-label",
-      selectedTheme === "dark"
-        ? "Switch to light mode"
-        : "Switch to dark mode"
-    );
-  }
-
-  if (themeColor) {
-    themeColor.setAttribute(
-      "content",
-      selectedTheme === "dark" ? "#101827" : "#f5f6fa"
-    );
-  }
-}
-
-function initialiseTheme() {
-  let savedTheme = "dark";
-
-  try {
-    const storedTheme = localStorage.getItem(THEME_KEY);
-
-    if (storedTheme === "light" || storedTheme === "dark") {
-      savedTheme = storedTheme;
-    }
-  } catch (error) {
-    console.warn("Theme preference could not be loaded.");
-  }
-
-  applyTheme(savedTheme);
-
-  const themeToggle = document.getElementById("themeToggle");
-
-  if (themeToggle) {
-    themeToggle.addEventListener("click", function () {
-      const currentTheme =
-        document.documentElement.getAttribute("data-theme") || "dark";
-
-      const newTheme = currentTheme === "dark" ? "light" : "dark";
-
-      applyTheme(newTheme);
-
-      try {
-        localStorage.setItem(THEME_KEY, newTheme);
-      } catch (error) {
-        console.warn("Theme preference could not be saved.");
-      }
-    });
-  }
-}
-
-// =====================================
-// 4. READ SAVED REGISTRATIONS
-// =====================================
-
-function getRegistrations() {
-  try {
-    const savedData = localStorage.getItem(REGISTRATION_KEY);
-
-    if (!savedData) {
-      return [];
-    }
-
-    const registrations = JSON.parse(savedData);
-
-    return Array.isArray(registrations) ? registrations : [];
-  } catch (error) {
-    console.error("Could not read registrations:", error);
-    return [];
-  }
-}
-
-// =====================================
-// 5. SAVE A REGISTRATION
-// =====================================
-
-function saveRegistration(person) {
-  const registrations = getRegistrations();
-
-  // Check whether this phone number already exists.
-  const phone = person.phone.trim();
-
-  if (phone) {
-    const phoneExists = registrations.some(function (registration) {
-      return (
-        registration.phone &&
-        registration.phone.trim() === phone
-      );
-    });
-
-    if (phoneExists) {
-      return {
-        success: false,
-        message:
-          "This phone number has already been registered on this browser. Please check your details."
-      };
-    }
-  }
-
-  registrations.push(person);
-
-  try {
-    localStorage.setItem(
-      REGISTRATION_KEY,
-      JSON.stringify(registrations)
-    );
-
-    return { success: true };
-  } catch (error) {
-    console.error("Could not save registration:", error);
-
-    return {
-      success: false,
-      message:
-        "Your registration could not be saved. Please check your browser storage and try again."
-    };
-  }
-}
-
-// =====================================
-// 6. SHOW REGISTRATION SUCCESS MESSAGE
-// =====================================
-
-function showSuccessMessage(fullName) {
-  const form = document.getElementById("registrationForm");
-  const successMessage = document.getElementById("successMessage");
-
-  if (!form || !successMessage) {
-    return;
-  }
-
-  // Clear any previous message.
-  successMessage.replaceChildren();
-
-  const heading = document.createElement("h3");
-  heading.textContent = "Registration Successful!";
-
-  const greeting = document.createElement("p");
-  greeting.textContent = `Thank you, ${fullName}, for worshipping with RCF, House of Revealed God's Glory.`;
-
-  const message = document.createElement("p");
-  message.textContent =
-    "We're delighted to have you with us. Enjoy the rest of the service!";
-
-  successMessage.append(heading, greeting, message);
-
-  form.hidden = true;
-  successMessage.hidden = false;
-
-  successMessage.scrollIntoView({
-    behavior: "smooth",
-    block: "center"
+  button.addEventListener("click", function () {
+    var next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    try { localStorage.setItem("rcf-theme", next); } catch (e) {}
+    render(next);
   });
-}
+})();
 
-// =====================================
-// 7. SHOW FORM ERROR
-// =====================================
+// ======================================================================================
+// PART 2: REGISTRATION FORM
+// Talks to Supabase ONLY through the register_member() database function
+// (see supabase/schema.sql).
+// ======================================================================================
+(function () {
+  var config = window.RCF_CONFIG || {};
+  var form = document.getElementById("registration-form");
+  var submitBtn = document.getElementById("submit-btn");
+  var formError = document.getElementById("form-error");
+  var successSection = document.getElementById("success-section");
+  var registerSection = document.getElementById("register-section");
+  var welcomeSection = document.getElementById("welcome");
 
-function showFormError(message) {
-  const form = document.getElementById("registrationForm");
+  // ---- Small setup: year, date display, level options ---------------------------------
+  document.getElementById("year").textContent = new Date().getFullYear();
 
-  if (!form) {
-    return;
+  // Display only. The real saved date is set by the database in the Africa/Lagos timezone.
+  document.getElementById("reg-date").value = new Intl.DateTimeFormat("en-GB", {
+    dateStyle: "full",
+    timeZone: config.TIMEZONE || "Africa/Lagos",
+  }).format(new Date());
+
+  var levelSelect = document.getElementById("level");
+  (config.LEVELS || []).forEach(function (levelName) {
+    var option = document.createElement("option");
+    option.value = levelName;
+    option.textContent = levelName; // textContent = safe, never inserts HTML
+    levelSelect.appendChild(option);
+  });
+
+  // ---- Supabase client ----------------------------------------------------------------
+  var configured =
+    config.SUPABASE_URL && config.SUPABASE_ANON_KEY &&
+    config.SUPABASE_URL.indexOf("PASTE_") !== 0 && config.SUPABASE_ANON_KEY.indexOf("PASTE_") !== 0;
+
+  var client = null;
+  if (configured && window.supabase) {
+    client = window.supabase.createClient(config.SUPABASE_URL, config.SUPABASE_ANON_KEY);
   }
 
-  let errorMessage = document.getElementById("formError");
+  // ---- One token per form. A double click or retry reuses it, so no duplicate rows. ---
+  var submissionToken = crypto.randomUUID();
+  var isSubmitting = false;
 
-  if (!errorMessage) {
-    errorMessage = document.createElement("p");
-    errorMessage.id = "formError";
-    errorMessage.setAttribute("role", "alert");
-    errorMessage.style.color = "#e05252";
-    errorMessage.style.marginTop = "12px";
-
-    const submitButton = form.querySelector('[type="submit"]');
-
-    if (submitButton) {
-      submitButton.insertAdjacentElement("beforebegin", errorMessage);
-    } else {
-      form.appendChild(errorMessage);
-    }
-  }
-
-  errorMessage.textContent = message;
-}
-
-// =====================================
-// 8. HANDLE REGISTRATION FORM
-// =====================================
-
-function handleRegistration(event) {
-  event.preventDefault();
-
-  const form = document.getElementById("registrationForm");
-
-  if (!form) {
-    return;
-  }
-
-  // Clear any previous error.
-  const previousError = document.getElementById("formError");
-
-  if (previousError) {
-    previousError.remove();
-  }
-
-  if (!form.checkValidity()) {
-    form.reportValidity();
-    return;
-  }
-
-  const fullName = document.getElementById("fullName").value.trim();
-  const level = document.getElementById("level").value;
-  const phone = document.getElementById("phoneNumber").value.trim();
-  const department = document.getElementById("department").value.trim();
-  const gender = document.getElementById("gender").value;
-  const category = document.getElementById("category").value;
-
-  if (!fullName || !level || !department || !gender || !category) {
-    showFormError("Please complete all required fields.");
-    return;
-  }
-
-  const person = {
-    id:
-      typeof crypto !== "undefined" && crypto.randomUUID
-        ? crypto.randomUUID()
-        : `${Date.now()}-${Math.random().toString(16).slice(2)}`,
-    registrationDate: getTodayDate(),
-    fullName: fullName,
-    level: level,
-    phone: phone,
-    department: department,
-    gender: gender,
-    category: category,
-    createdAt: new Date().toISOString()
+  // ---- Validation ---------------------------------------------------------------------
+  var fields = {
+    full_name: { input: "full-name", error: "full-name-error" },
+    level: { input: "level", error: "level-error" },
+    phone: { input: "phone", error: "phone-error" },
+    department: { input: "department", error: "department-error" },
+    gender: { input: "gender", error: "gender-error" },
+    category: { input: "category", error: "category-error" },
   };
 
-  const result = saveRegistration(person);
-
-  if (!result.success) {
-    showFormError(result.message);
-    return;
+  function setFieldError(key, message) {
+    var el = document.getElementById(fields[key].error);
+    var input = document.getElementById(fields[key].input);
+    if (message) {
+      el.textContent = message;
+      el.hidden = false;
+      input.setAttribute("aria-invalid", "true");
+    } else {
+      el.textContent = "";
+      el.hidden = true;
+      input.removeAttribute("aria-invalid");
+    }
   }
 
-  showSuccessMessage(fullName);
-}
-
-// =====================================
-// 9. START THE WEBSITE
-// =====================================
-
-document.addEventListener("DOMContentLoaded", function () {
-  setRegistrationDate();
-  setFooterYear();
-  initialiseTheme();
-
-  const registrationForm =
-    document.getElementById("registrationForm");
-
-  if (registrationForm) {
-    registrationForm.addEventListener(
-      "submit",
-      handleRegistration
-    );
+  function readValues() {
+    return {
+      full_name: document.getElementById("full-name").value.trim(),
+      level: document.getElementById("level").value,
+      phone: document.getElementById("phone").value.trim(),
+      department: document.getElementById("department").value.trim(),
+      gender: document.getElementById("gender").value,
+      category: document.getElementById("category").value,
+    };
   }
-});
+
+  // Returns true if everything is valid. The database checks the same rules again.
+  function validate(v) {
+    var ok = true;
+    function fail(key, msg) { setFieldError(key, msg); ok = false; }
+    Object.keys(fields).forEach(function (k) { setFieldError(k, ""); });
+
+    if (v.full_name.length < 2) fail("full_name", "Please enter your full name.");
+    if (!v.level) fail("level", "Please choose your level.");
+    if (!v.department) fail("department", "Please enter your department.");
+    if (!v.gender) fail("gender", "Please choose an option.");
+    if (!v.category) fail("category", "Please choose a category.");
+
+    if (v.phone) {
+      // Accept spaces, dashes, brackets and a leading +; require at least 7 digits.
+      var digits = v.phone.replace(/\D/g, "");
+      if (!/^[0-9+()\s-]{7,25}$/.test(v.phone) || digits.length < 7) {
+        fail("phone", "Please enter a valid phone number, or leave it blank.");
+      }
+    }
+    return ok;
+  }
+
+  function showFormError(message) {
+    formError.textContent = message;
+    formError.hidden = false;
+    formError.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+
+  function setBusy(busy) {
+    isSubmitting = busy;
+    submitBtn.disabled = busy;
+    submitBtn.textContent = busy ? "Submitting…" : "Submit Registration";
+  }
+
+  // ---- Submit -------------------------------------------------------------------------
+  form.addEventListener("submit", async function (event) {
+    event.preventDefault();
+    if (isSubmitting) return; // ignore repeated clicks
+    formError.hidden = true;
+
+    var values = readValues();
+    if (!validate(values)) {
+      var firstBad = form.querySelector("[aria-invalid='true']");
+      if (firstBad) firstBad.focus();
+      return;
+    }
+
+    if (!client) {
+      showFormError("Registration is not available right now. Please tell a church worker.");
+      return;
+    }
+
+    setBusy(true);
+    try {
+      var result = await client.rpc("register_member", {
+        p_full_name: values.full_name,
+        p_level: values.level,
+        p_phone: values.phone || null,
+        p_department: values.department,
+        p_gender: values.gender,
+        p_category: values.category,
+        p_client_token: submissionToken,
+      });
+
+      // Success is shown ONLY when the database says it saved (no error, ok === true).
+      if (result.error || !result.data || result.data.ok !== true) {
+        console.error("Registration failed:", result.error);
+        showFormError(
+          "We couldn't save your registration. Please check your connection and try again. " +
+          "Your details are still on this page."
+        );
+        setBusy(false);
+        return;
+      }
+
+      form.reset();
+      submissionToken = crypto.randomUUID(); // fresh token for the next person
+      registerSection.hidden = true;
+      welcomeSection.hidden = true;
+      successSection.hidden = false;
+      successSection.scrollIntoView({ behavior: "smooth", block: "start" });
+      setBusy(false);
+    } catch (err) {
+      console.error("Registration error:", err);
+      showFormError("Something went wrong while saving. Please try again.");
+      setBusy(false);
+    }
+  });
+
+  document.getElementById("register-another").addEventListener("click", function () {
+    successSection.hidden = true;
+    welcomeSection.hidden = false;
+    registerSection.hidden = false;
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+})();
