@@ -95,7 +95,7 @@ h1:focus, h2:focus { outline: none; } /* headings get focus only so screen reade
 
 .brand { display: flex; align-items: center; gap: 12px; min-width: 0; margin-right: auto; padding: 4px 0 10px; color: inherit; text-decoration: none; }
 .brand-mark {
-  flex: none; width: 44px; height: 44px; display: grid; place-items: center;
+  object-fit: cover; background: #2a0d05; flex: none; width: 44px; height: 44px; display: grid; place-items: center;
   border: 2px solid var(--gold); border-radius: 10px; color: var(--gold); font-weight: 700; letter-spacing: 0.05em;
 }
 .brand-text { display: flex; flex-direction: column; min-width: 0; line-height: 1.25; }
@@ -281,7 +281,7 @@ dialog form { margin-top: 16px; }
   <header class="site-header">
     <div class="container header-inner">
       <a class="brand" href="#home" aria-label="RCF Attendance Report, home">
-        <span class="brand-mark" aria-hidden="true">RCF</span>
+        <img class="brand-mark" src="assets/logo.jpg" alt="RCF logo" width="44" height="44">
         <span class="brand-text">
           <span class="brand-name">Redeem Christian Fellowship</span>
           <span class="brand-house">House of Revealed God's Glory</span>
