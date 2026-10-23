@@ -42,7 +42,7 @@ p{margin:0 0 12px}
 .site-header{position:sticky;top:0;z-index:20;background:var(--surface);border-bottom:1px solid var(--border)}
 .header-inner{display:flex;align-items:center;gap:10px;padding-top:10px;padding-bottom:10px}
 .brand{display:flex;align-items:center;gap:12px;min-width:0;margin-right:auto;color:inherit;text-decoration:none}
-.brand-mark{flex:none;width:44px;height:44px;display:grid;place-items:center;border:2px solid var(--gold);border-radius:10px;color:var(--gold);font-weight:700;letter-spacing:.05em}
+.brand-logo{flex:none;width:44px;height:44px;object-fit:contain;border-radius:10px}
 .brand-text{display:flex;flex-direction:column;min-width:0;line-height:1.25}
 .brand-name{font-weight:600;font-size:.95rem}
 .brand-house{color:var(--gold);font-size:.85rem}
@@ -92,14 +92,13 @@ input:hover{border-color:var(--gold)}
 .back-link{display:inline-flex;align-items:center;min-height:44px;margin-top:6px;color:var(--text-muted);text-decoration:none}
 .back-link:hover{color:var(--gold)}
 @media(min-width:720px){.auth-wrap{padding-top:56px}.panel{padding:36px}}
-
   </style>
 </head>
 <body>
   <header class="site-header">
     <div class="container header-inner">
       <a class="brand" href="index.html" aria-label="RCF Attendance Report">
-        <span class="brand-mark" aria-hidden="true">RCF</span>
+        <img src="logo.jpg" alt="RCF Church Logo" class="brand-logo" />
         <span class="brand-text">
           <span class="brand-name">Redeem Christian Fellowship</span>
           <span class="brand-house">House of Revealed God's Glory</span>
@@ -158,8 +157,6 @@ input:hover{border-color:var(--gold)}
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
   <script>
-
-// ---- Settings: read from supabase-config.js (loaded before this script) ----
 var config = window.RCF_CONFIG || {};
 var configured = !!(config.SUPABASE_URL && config.SUPABASE_ANON_KEY &&
   config.SUPABASE_URL.indexOf("PASTE_") !== 0 && config.SUPABASE_ANON_KEY.indexOf("PASTE_") !== 0);
@@ -167,7 +164,6 @@ var client = (configured && window.supabase)
   ? window.supabase.createClient(config.SUPABASE_URL, config.SUPABASE_ANON_KEY)
   : null;
 
-// ---- Theme toggle (icon button) ----
 (function () {
   var root = document.documentElement;
   var button = document.getElementById("theme-toggle");
@@ -184,7 +180,6 @@ var client = (configured && window.supabase)
 })();
 document.getElementById("year").textContent = new Date().getFullYear();
 
-// ---- Login page ----
 (function () {
   var form = document.getElementById("login-form");
   var emailInput = document.getElementById("email");
@@ -203,7 +198,6 @@ document.getElementById("year").textContent = new Date().getFullYear();
     button.textContent = value ? "Signing in…" : "Sign in";
   }
 
-  // Show/hide password
   var pwToggle = document.getElementById("pw-toggle");
   pwToggle.addEventListener("click", function () {
     var show = passwordInput.type === "password";
@@ -212,7 +206,6 @@ document.getElementById("year").textContent = new Date().getFullYear();
     pwToggle.setAttribute("aria-label", show ? "Hide password" : "Show password");
   });
 
-  // Does this signed-in person have an active staff profile? (The database decides.)
   async function hasAccess(userId) {
     var res = await client.from("profiles").select("role, is_active").eq("id", userId).maybeSingle();
     return !res.error && res.data && res.data.is_active === true;
@@ -227,7 +220,6 @@ document.getElementById("year").textContent = new Date().getFullYear();
       button.disabled = true;
       return;
     }
-    // Already signed in? Skip straight to the dashboard.
     var session = await client.auth.getSession();
     if (session.data && session.data.session) {
       if (await hasAccess(session.data.session.user.id)) {
@@ -254,7 +246,6 @@ document.getElementById("year").textContent = new Date().getFullYear();
     try {
       var result = await client.auth.signInWithPassword({ email: email, password: password });
       if (result.error || !result.data || !result.data.user) {
-        // Same message for wrong email and wrong password, so nobody can probe which emails exist.
         showError("Incorrect email or password.");
         setBusy(false);
         return;
@@ -278,4 +269,3 @@ document.getElementById("year").textContent = new Date().getFullYear();
   </script>
 </body>
 </html>
-
