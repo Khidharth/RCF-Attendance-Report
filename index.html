@@ -993,7 +993,7 @@
       <div class="panel success">
         <div class="check" aria-hidden="true">✓</div>
         <h2 id="success-title" tabindex="-1">Registration Successful!</h2>
-        <p>
+        <p id="success-text">
           Thank you for worshipping with RCF, House of God's Revealed Glory. We're delighted to have you
           with us. Enjoy the rest of the service!
         </p>
@@ -1380,6 +1380,14 @@
             return;
           }
 
+          // If this person is already on the list, nothing new is saved. Tell them kindly.
+          var already = result.data.already_registered === true;
+          document.getElementById("success-title").textContent = already
+            ? "You're already registered"
+            : "Registration Successful!";
+          document.getElementById("success-text").textContent = already
+            ? "Welcome back! Our records already have you, so there is no need to register again. Just let a church worker know your name and they will mark you present. Enjoy the service!"
+            : "Thank you for worshipping with RCF, House of God's Revealed Glory. We're delighted to have you with us. Enjoy the rest of the service!";
           form.reset();
           submissionToken = crypto.randomUUID();
           setBusy(false);
