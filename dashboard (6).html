@@ -1,0 +1,2433 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Dashboard | RCF Attendance Report</title>
+  <link rel="icon" href="logo.jpg" />
+  <script>
+    (function () {
+      var theme = "dark";
+      try { theme = localStorage.getItem("rcf-theme") === "light" ? "light" : "dark"; } catch (e) {}
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+  <style>
+:root, :root[data-theme="dark"] {
+  --bg:#0d1b2e; --surface:#14263d; --surface-2:#1b3150; --text:#eaeef4; --text-muted:#a9b6c8; --border:#2a4160;
+  --gold:#c9a961; --gold-strong:#d8bb74; --gold-soft:rgba(201,169,97,.14); --on-gold:#1a1405;
+  --danger:#f0a0a0; --danger-bg:#3a1d22; --success:#8fd19e; --success-bg:#17301f; --focus:#e6cd92;
+  --shadow:0 8px 24px rgba(0,0,0,.25); color-scheme:dark;
+}
+:root[data-theme="light"] {
+  --bg:#f7f5f0; --surface:#fff; --surface-2:#efece4; --text:#1d2733; --text-muted:#5a6675; --border:#d9d4c7;
+  --gold:#8f6f1f; --gold-strong:#7a5d15; --gold-soft:rgba(143,111,31,.1); --on-gold:#fff;
+  --danger:#8a1f1f; --danger-bg:#fbeaea; --success:#25623a; --success-bg:#e8f3ea; --focus:#8f6f1f;
+  --shadow:0 8px 24px rgba(29,39,51,.08); color-scheme:light;
+}
+*,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none!important}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;min-height:100vh;display:flex;flex-direction:column;background:var(--bg);color:var(--text);
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;line-height:1.6;overflow-x:hidden}
+h1,h2,h3{margin:0;line-height:1.2}
+p{margin:0 0 12px}
+.muted{color:var(--text-muted)}
+.small{font-size:.9rem}
+.container{width:100%;max-width:1100px;margin:0 auto;padding:0 16px}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.eyebrow{margin:0 0 6px;color:var(--gold);text-transform:uppercase;letter-spacing:.14em;font-size:.78rem;font-weight:600}
+
+/* Header */
+.site-header{position:sticky;top:0;z-index:20;background:var(--surface);border-bottom:1px solid var(--border)}
+.header-inner{display:flex;align-items:center;gap:10px;padding-top:10px;padding-bottom:10px}
+.brand{display:flex;align-items:center;gap:12px;min-width:0;margin-right:auto;color:inherit;text-decoration:none}
+.brand-mark{flex:none;width:44px;height:44px;display:block;position:relative;overflow:hidden;background:#3a0f05;border:2px solid var(--gold);border-radius:10px}
+.brand-mark img{display:block;width:100%;height:100%;object-fit:cover;transform:translateY(-26%) scale(2.2)}
+.brand-text{display:flex;flex-direction:column;min-width:0;line-height:1.25}
+.brand-name{font-weight:600;font-size:.95rem}
+.brand-house{color:var(--gold);font-size:.85rem}
+.theme-toggle{flex:none;width:44px;height:44px;padding:0;display:inline-grid;place-items:center;background:var(--surface-2);color:var(--gold);border:1px solid var(--border);border-radius:50%;cursor:pointer}
+.theme-toggle:hover{border-color:var(--gold);background:var(--gold-soft)}
+.theme-toggle svg{width:20px;height:20px}
+.icon-moon{display:none}
+:root[data-theme="light"] .icon-sun{display:none}
+:root[data-theme="light"] .icon-moon{display:block}
+
+/* Buttons + forms */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 20px;border-radius:10px;border:1px solid transparent;font:inherit;font-weight:600;text-decoration:none;cursor:pointer}
+.btn-lg{min-height:52px;font-size:1.02rem}
+.btn-block{width:100%}
+.btn-primary{background:var(--gold);color:var(--on-gold)}
+.btn-primary:hover{background:var(--gold-strong)}
+.btn-secondary{background:transparent;color:var(--text);border-color:var(--border)}
+.btn-secondary:hover{border-color:var(--gold)}
+.btn:disabled{opacity:.6;cursor:not-allowed}
+.field{margin:0 0 18px}
+label{display:block;margin-bottom:6px;font-weight:600}
+input[type=text],input[type=email],input[type=password]{width:100%;min-height:48px;padding:10px 12px;font:inherit;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:10px}
+input:hover{border-color:var(--gold)}
+.alert{padding:12px 14px;margin-bottom:18px;border-radius:10px}
+.alert-error{background:var(--danger-bg);color:var(--danger);border:1px solid var(--danger)}
+.alert-info{background:var(--gold-soft);border:1px solid var(--border)}
+
+/* Footer */
+.site-footer{padding:20px 0;text-align:center;color:var(--text-muted);font-size:.9rem;background:var(--surface);border-top:1px solid var(--border)}
+.site-footer p{margin:4px 0}
+.footer-values{color:var(--gold);letter-spacing:.05em}
+
+.sr-label{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.center{text-align:center;margin-top:12px}
+.block{display:block}
+.grow{flex:1 1 220px}
+.small{font-size:.88rem}
+.ok-text{color:var(--success)}
+input[type=search],input[type=url],input[type=date],select{width:100%;min-height:48px;padding:10px 12px;font:inherit;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:10px}
+select{appearance:auto}
+input[type=date]{min-width:0}
+input[type=checkbox]{width:20px;height:20px;accent-color:var(--gold)}
+.check{display:flex;align-items:center;gap:10px;margin:8px 0 14px;font-weight:500}
+body:not(.ready) .shell,body:not(.ready) .page-head{visibility:hidden}
+.loading{padding:48px 0;text-align:center;color:var(--text-muted)}
+.btn-sm{min-height:44px;padding:0 14px;white-space:nowrap}
+.btn-danger{background:var(--danger-bg);color:var(--danger);border-color:var(--danger)}
+.alert-success{background:var(--success-bg);color:var(--success);border:1px solid var(--success)}
+.icon-btn{display:inline-grid;place-items:center;width:44px;height:44px;padding:0;background:transparent;color:var(--text);border:1px solid var(--border);border-radius:10px;cursor:pointer}
+.icon-btn:hover{border-color:var(--gold);color:var(--gold)}
+
+/* header */
+.header-inner{gap:10px}
+.menu-btn{flex:none}
+.user-chip{display:none;align-items:center;gap:10px;margin-left:4px;padding:4px 12px 4px 4px;border:1px solid var(--border);border-radius:999px;background:var(--surface-2)}
+.user-chip-avatar{width:34px;height:34px;display:grid;place-items:center;border-radius:50%;background:var(--gold);color:var(--on-gold);font-weight:700}
+.user-chip-text{display:flex;flex-direction:column;line-height:1.15;min-width:0}
+#user-chip-name{font-weight:600;font-size:.9rem;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#user-chip-role{font-size:.72rem;color:var(--gold);text-transform:uppercase;letter-spacing:.07em;font-weight:600}
+.logout-text{display:none}
+@media(min-width:640px){.user-chip{display:flex}.logout-text{display:inline}.btn-sm{padding:0 16px}}
+@media(max-width:399px){.brand-house{display:none}}
+
+/* mobile drawer */
+.drawer{position:fixed;inset:0;z-index:40}
+.drawer-backdrop{position:absolute;inset:0;background:rgba(5,12,22,.6)}
+.drawer-nav{position:absolute;top:0;left:0;bottom:0;width:min(82vw,320px);padding:16px 12px;background:var(--surface);border-right:1px solid var(--border);overflow-y:auto;display:flex;flex-direction:column;gap:4px}
+.drawer-nav::before{content:"Menu";display:block;padding:8px 12px 12px;color:var(--gold);text-transform:uppercase;letter-spacing:.14em;font-size:.78rem;font-weight:600}
+@media(min-width:900px){.drawer,.menu-btn{display:none!important}}
+
+/* layout */
+.page-head{padding-top:18px;padding-bottom:4px}
+.page-head h1{font-size:1.5rem}
+.shell{flex:1;display:grid;gap:16px;padding-top:8px;padding-bottom:40px;align-items:start}
+.side-nav{display:none}
+.nav-item{display:flex;align-items:center;gap:12px;min-height:48px;padding:0 14px;color:var(--text-muted);text-decoration:none;font-weight:600;border-radius:10px}
+.nav-item:hover{background:var(--surface-2);color:var(--text)}
+.nav-item[aria-current="page"]{color:var(--gold);background:var(--gold-soft)}
+@media(min-width:900px){
+  .shell{grid-template-columns:230px minmax(0,1fr);gap:28px}
+  .side-nav{display:flex;flex-direction:column;gap:2px;padding:8px;background:var(--surface);border:1px solid var(--border);border-radius:14px;position:sticky;top:88px}
+}
+main{min-width:0}
+.view-title{font-size:1.25rem;margin:4px 0 14px}
+.view[hidden]{display:none}
+.section-title{font-size:1.05rem;margin:18px 0 10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em}
+.section-title:first-child{margin-top:4px}
+
+/* cards + stats */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:16px}
+.card h2{font-size:1.15rem;margin-bottom:12px}
+.card h3{font-size:.95rem;margin:18px 0 8px;color:var(--text-muted)}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:8px}
+.stat{padding:14px 16px;background:var(--surface);border:1px solid var(--border);border-top:3px solid var(--gold);border-radius:12px}
+.stat-value{display:block;font-size:1.8rem;font-weight:700;line-height:1.1}
+.stat-label{display:block;margin-top:4px;font-weight:600;font-size:.92rem}
+.stat-hint{display:block;margin-top:2px;color:var(--text-muted);font-size:.8rem}
+@media(min-width:700px){.stats{grid-template-columns:repeat(3,1fr)}.stats-3{grid-template-columns:repeat(2,1fr)}}
+.stats-3{grid-template-columns:1fr}
+@media(min-width:560px){.stats-3{grid-template-columns:repeat(2,1fr)}}
+.empty{padding:28px 12px;text-align:center;color:var(--text-muted)}
+.empty strong{display:block;color:var(--text);margin-bottom:4px}
+.empty .btn{margin-top:10px}
+.toolbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 16px;margin-bottom:14px}
+.toolbar-main{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.toolbar-main select{width:auto;min-width:180px}
+.toolbar-label{margin:0;color:var(--text-muted);font-size:.9rem}
+.toolbar-row{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px}
+.toolbar-actions{display:flex;flex-wrap:wrap;gap:8px}
+.inline-fields{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.inline-fields input{width:auto}
+.date-field{display:flex;flex-direction:column;gap:4px;font-weight:600;font-size:.9rem}
+.date-field input{min-width:150px}
+.filters{display:flex;flex-wrap:wrap;gap:10px}
+.filters .field{margin:0;min-width:150px;flex:0 1 auto}
+.filters .field.grow{flex:1 1 240px}
+.form-grid{display:grid;gap:0 16px}
+@media(min-width:600px){.form-grid{grid-template-columns:repeat(3,1fr)}}
+
+/* tables become cards on phones */
+.table{width:100%;border-collapse:collapse}
+.table th{text-align:left;color:var(--text-muted);font-size:.78rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+.table th,.table td{padding:10px 8px;border-bottom:1px solid var(--border);vertical-align:middle}
+.table .num{text-align:right}
+.row-total td{font-weight:700;background:var(--gold-soft)}
+.row-actions{white-space:nowrap}
+.row-actions .btn{margin:2px 4px 2px 0}
+@media(max-width:699px){
+  .table thead{display:none}
+  .table tr{display:block;padding:10px 0;border-bottom:1px solid var(--border)}
+  .table td{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:4px 0;border:0;text-align:right}
+  .table td::before{content:attr(data-label);color:var(--text-muted);text-align:left;flex:none}
+  .table td:first-child{font-weight:600}
+  .row-actions{white-space:normal;justify-content:flex-start!important;flex-wrap:wrap}
+  .row-actions::before{display:none}
+}
+.name-btn{font-weight:600;color:var(--text);text-decoration:none;text-align:left;min-height:32px}
+.name-btn:hover{color:var(--gold);text-decoration:underline}
+.pill{display:inline-block;padding:2px 10px;font-size:.8rem;font-weight:600;background:var(--gold-soft);border:1px solid transparent;border-radius:999px;white-space:nowrap}
+.pill-first-timer{border-color:var(--gold)}
+.pill-new-convert{border-style:dashed;border-color:var(--gold)}
+.pill-present{background:var(--success-bg);color:var(--success);border-color:var(--success)}
+.pill-absent{background:var(--danger-bg);color:var(--danger);border-color:var(--danger)}
+.pill-note{background:transparent;color:var(--text-muted);border-color:var(--border);margin-left:6px}
+
+/* charts */
+.chart-grid-2{display:grid;gap:16px}
+@media(min-width:900px){.chart-grid-2{grid-template-columns:3fr 2fr}}
+.chart{width:100%;height:auto;display:block}
+.chart-axis{stroke:var(--border);stroke-width:1}
+.chart-grid{stroke:var(--border);stroke-width:1;stroke-dasharray:3 4;opacity:.7}
+.chart-bar{fill:var(--gold)}
+.chart-value{fill:var(--text);font-size:13px;font-weight:600}
+.chart-label,.chart-tick{fill:var(--text-muted);font-size:12px}
+.hbars{display:grid;gap:12px;margin-bottom:14px}
+.hbar-row{display:grid;grid-template-columns:96px 1fr 34px;align-items:center;gap:10px;font-size:.9rem}
+.hbar-track{height:12px;background:var(--surface-2);border-radius:6px;overflow:hidden}
+.hbar-fill{display:block;height:100%;background:var(--gold);border-radius:6px}
+.hbar-value{text-align:right;font-weight:600}
+.details summary{cursor:pointer;font-weight:600;min-height:32px}
+.details-inline{margin:8px 0 14px}
+.details-inline summary{cursor:pointer;color:var(--gold);font-weight:600;min-height:32px}
+
+/* attendance */
+.att-pick{display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px;margin-bottom:6px}
+.att-pick .field{margin:0;flex:0 1 220px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 14px}
+.chip{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 14px;font:inherit;font-weight:600;color:var(--text);background:var(--surface-2);border:1px solid var(--border);border-radius:999px;cursor:pointer}
+.chip[aria-pressed="true"]{border-color:var(--gold);background:var(--gold-soft);color:var(--gold)}
+.chip-count{font-weight:500;font-size:.8rem;color:var(--text-muted)}
+.new-service{display:flex;flex-wrap:wrap;gap:8px}
+.new-service input{flex:1 1 220px;width:auto;min-height:48px;padding:10px 12px;font:inherit;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:10px}
+.svc-head{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;margin-bottom:10px}
+.svc-head h2{margin-bottom:2px}
+.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
+.tabs-3{grid-template-columns:repeat(3,1fr)}
+.tab{display:flex;flex-direction:column;align-items:center;min-height:56px;padding:6px 4px;font:inherit;font-size:.82rem;color:var(--text-muted);background:var(--surface-2);border:1px solid var(--border);border-radius:10px;cursor:pointer}
+.tab-num{font-size:1.25rem;font-weight:700;color:var(--text)}
+.tab[aria-pressed="true"]{border-color:var(--gold);background:var(--gold-soft);color:var(--gold)}
+.tab[aria-pressed="true"] .tab-num{color:var(--gold)}
+.att-list{display:grid;gap:8px}
+.att-row{display:grid;gap:10px;padding:12px;background:var(--bg);border:1px solid var(--border);border-radius:12px}
+.att-row.is-present{border-left:4px solid var(--success)}
+.att-row.is-absent{border-left:4px solid var(--danger)}
+.att-info{display:flex;flex-direction:column;gap:2px;min-width:0}
+.att-info strong{overflow-wrap:anywhere}
+.att-tags{margin-top:4px}
+.att-actions{display:flex;gap:8px}
+.seg{flex:1;min-height:48px;padding:0 12px;font:inherit;font-weight:600;color:var(--text);background:var(--surface-2);border:1px solid var(--border);border-radius:10px;cursor:pointer}
+.seg:disabled{opacity:.55;cursor:wait}
+.seg-present[aria-pressed="true"]{background:var(--success-bg);color:var(--success);border-color:var(--success)}
+.seg-absent[aria-pressed="true"]{background:var(--danger-bg);color:var(--danger);border-color:var(--danger)}
+.seg-present[aria-pressed="true"]::before{content:"✓ "}
+.seg-clear{flex:0 0 auto;color:var(--text-muted);font-weight:500}
+.att-banner{display:block;margin:0 0 14px;padding:10px 12px;font-size:.92rem;border-radius:10px;border:1px solid var(--border);background:var(--surface-2)}
+.att-banner-open{border-color:var(--gold);background:var(--gold-soft)}
+.att-banner-closed{border-left:4px solid var(--danger)}
+.att-section{display:flex;flex-direction:column;gap:2px;margin:18px 0 8px;padding:8px 2px 6px;border-bottom:2px solid var(--border)}
+.att-section strong{font-size:1rem}
+.att-section-present{border-bottom-color:var(--success)}.att-section-present strong{color:var(--success)}
+.att-section-absent{border-bottom-color:var(--danger)}.att-section-absent strong{color:var(--danger)}
+.att-section-waiting{border-bottom-color:var(--gold)}.att-section-waiting strong{color:var(--gold)}
+.att-section:first-child{margin-top:4px}
+.att-row.is-done{background:var(--surface)}
+.att-state{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px}
+.state-badge{display:inline-block;padding:4px 12px;font-weight:700;font-size:.9rem;border-radius:999px;border:1px solid}
+.state-present{background:var(--success-bg);color:var(--success);border-color:var(--success)}
+.state-absent{background:var(--danger-bg);color:var(--danger);border-color:var(--danger)}
+.link-btn.small{font-size:.85rem}
+.qr-logo{display:block;margin:0 auto 10px;width:72px;height:72px;object-fit:cover;border-radius:12px;border:2px solid var(--gold)}
+@media(min-width:700px){.att-row{grid-template-columns:1fr auto;align-items:center}.att-actions{min-width:260px}}
+
+/* members */
+.dups{margin:12px 0;padding:14px;background:var(--surface-2);border-radius:12px}
+.dup-group{padding:10px 0;border-top:1px solid var(--border)}
+.dup-row{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;padding:6px 0}
+.kvs{display:grid;gap:8px;margin:12px 0}
+.kv{display:flex;justify-content:space-between;gap:16px;padding:6px 0;border-bottom:1px solid var(--border)}
+.kv dt{color:var(--text-muted)}.kv dd{margin:0;font-weight:600;text-align:right}
+.history{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:6px}
+.history li{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)}
+
+/* dialogs + toast */
+.dlg{width:min(92vw,460px);max-height:90vh;padding:22px;color:var(--text);background:var(--surface);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow)}
+.dlg-wide{width:min(94vw,600px)}
+.dlg::backdrop{background:rgba(5,12,22,.65)}
+.dlg h2{font-size:1.25rem;margin-bottom:8px}
+.dlg-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.dlg-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:10px;margin-top:18px}
+.toast{position:fixed;left:50%;bottom:20px;z-index:60;transform:translateX(-50%);max-width:min(92vw,460px);padding:12px 18px;color:var(--on-gold);background:var(--gold);border-radius:12px;font-weight:600;box-shadow:var(--shadow)}
+.toast-error{background:var(--danger-bg);color:var(--danger);border:1px solid var(--danger)}
+.steps{margin:0 0 14px;padding-left:20px}.steps li{margin-bottom:6px}
+.export-bar{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px}
+.export-bar h2{margin:0}
+.export-actions,.csv-group{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.csv-group select{width:auto;min-width:210px}
+
+/* QR */
+.qr-card{text-align:center}
+.qr-box{width:min(100%,300px);margin:12px auto;padding:10px;background:#fff;border-radius:12px;border:1px solid var(--border)}
+.qr-box svg{display:block;width:100%;height:auto}
+.qr-url{word-break:break-all;color:var(--text-muted)}
+.qr-actions{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:14px}
+.print-only-title,.print-sub{display:none}
+
+@media print{
+  body *{visibility:hidden}
+  #qr-print,#qr-print *{visibility:visible}
+  #qr-print{position:absolute;inset:0;border:0;background:#fff;color:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+  #qr-print .eyebrow{color:#555}
+  #qr-print .print-only-title{display:block;font-size:2.4rem;margin:6px 0}
+  #qr-print .print-sub{display:block;color:#444}
+  #qr-print .qr-box{width:380px;border:0}
+  #qr-print .qr-url{color:#222;font-size:1rem}
+  .no-print{display:none!important}
+}
+
+#view-title:focus,.page-head h1:focus{outline:none}
+.link-btn{background:none;border:0;padding:0;font:inherit;color:var(--gold);text-decoration:underline;cursor:pointer;min-height:32px}
+.link-btn:hover{color:var(--gold-strong)}
+.dlg{overflow-y:auto;max-height:88vh}
+
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <button id="menu-btn" class="icon-btn menu-btn" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="drawer">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <a class="brand" href="#overview" aria-label="RCF Attendance Report dashboard">
+        <span class="brand-mark" aria-hidden="true"><img src="logo.jpg" alt="" width="44" height="44"></span>
+        <span class="brand-text">
+          <span class="brand-name">Redeem Christian Fellowship</span>
+          <span class="brand-house">House of God's Revealed Glory</span>
+        </span>
+      </a>
+      <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Switch to light mode">
+        <svg class="icon-sun" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+        <svg class="icon-moon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+      </button>
+      <div class="user-chip" aria-label="Signed in as">
+        <span id="user-chip-avatar" class="user-chip-avatar" aria-hidden="true"></span>
+        <span class="user-chip-text"><span id="user-chip-name"></span><span id="user-chip-role"></span></span>
+      </div>
+      <button id="logout-btn" class="btn btn-secondary btn-sm" type="button" aria-label="Log out">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+        <span class="logout-text">Log out</span>
+      </button>
+    </div>
+  </header>
+
+  <div id="drawer" class="drawer" hidden>
+    <div id="drawer-backdrop" class="drawer-backdrop"></div>
+    <nav id="drawer-nav" class="drawer-nav" aria-label="Main menu"></nav>
+  </div>
+
+  <div class="container">
+    <p id="loading" class="loading" role="status">Checking your login…</p>
+    <div id="fatal" class="alert alert-error" role="alert" hidden style="margin-top:20px"></div>
+  </div>
+
+  <div class="container page-head">
+    <p class="eyebrow">Attendance Report</p>
+    <h1 id="welcome">Welcome</h1>
+  </div>
+
+  <div class="container shell">
+    <nav id="side-nav" class="side-nav" aria-label="Dashboard"></nav>
+    <main id="main">
+      <h2 id="view-title" class="view-title">Overview</h2>
+      <section id="view-overview" class="view" hidden></section>
+      <section id="view-attendance" class="view" hidden></section>
+      <section id="view-members" class="view" hidden></section>
+      <section id="view-reports" class="view" hidden></section>
+      <section id="view-qr" class="view" hidden></section>
+      <section id="view-workers" class="view" hidden></section>
+      <section id="view-settings" class="view" hidden></section>
+      
+    </main>
+  </div>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p class="footer-values">Worship · Fellowship · Discipleship · Impact</p>
+      <p>© <span class="year"></span> RCF Attendance Report. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script>
+// ======================================================================================
+// RCFLib: file makers that need NO outside downloads.
+//   - toCsv()      : CSV text, safe against spreadsheet "formula" tricks
+//   - buildXlsx()  : a real Excel (.xlsx) file
+//   - buildPdf()   : a real PDF report with the RCF heading
+//   - qrEncode()   : QR code (as a grid of dark/light squares) + qrToSvg()
+// Nothing in here touches the page, so it can be tested on its own.
+// ======================================================================================
+var RCFLib = (function () {
+  "use strict";
+
+  // ------------------------------------------------------------------ helpers
+  function utf8(str) { return new TextEncoder().encode(str); }
+
+  // ------------------------------------------------------------------ CSV
+  // A cell that starts with = + - @ could be run as a formula when opened in Excel,
+  // so text cells like that get a leading apostrophe. Real numbers are left alone.
+  function csvCell(v) {
+    if (v === null || v === undefined) return "";
+    if (typeof v === "number") return Number.isFinite(v) ? String(v) : "";
+    var s = String(v);
+    if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;
+    if (/[",\r\n]/.test(s)) s = '"' + s.replace(/"/g, '""') + '"';
+    return s;
+  }
+  function toCsv(rows) {
+    // "\uFEFF" lets Excel open the file with the right accents/letters.
+    return "\uFEFF" + rows.map(function (r) { return r.map(csvCell).join(","); }).join("\r\n") + "\r\n";
+  }
+
+  // ------------------------------------------------------------------ ZIP (store only) for .xlsx
+  var CRC_TABLE = (function () {
+    var t = new Uint32Array(256);
+    for (var n = 0; n < 256; n++) {
+      var c = n;
+      for (var k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+      t[n] = c >>> 0;
+    }
+    return t;
+  })();
+  function crc32(bytes) {
+    var c = 0xFFFFFFFF;
+    for (var i = 0; i < bytes.length; i++) c = CRC_TABLE[(c ^ bytes[i]) & 0xFF] ^ (c >>> 8);
+    return (c ^ 0xFFFFFFFF) >>> 0;
+  }
+  function zipStore(files) { // files: [{name, data(Uint8Array)}]
+    var chunks = [], central = [], offset = 0;
+    function u16(v) { return [v & 255, (v >>> 8) & 255]; }
+    function u32(v) { return [v & 255, (v >>> 8) & 255, (v >>> 16) & 255, (v >>> 24) & 255]; }
+    var dosTime = 0, dosDate = ((2026 - 1980) << 9) | (1 << 5) | 1;
+    files.forEach(function (f) {
+      var name = utf8(f.name), crc = crc32(f.data), size = f.data.length;
+      var local = [].concat(u32(0x04034b50), u16(20), u16(0x0800), u16(0), u16(dosTime), u16(dosDate),
+        u32(crc), u32(size), u32(size), u16(name.length), u16(0));
+      chunks.push(new Uint8Array(local), name, f.data);
+      var cen = [].concat(u32(0x02014b50), u16(20), u16(20), u16(0x0800), u16(0), u16(dosTime), u16(dosDate),
+        u32(crc), u32(size), u32(size), u16(name.length), u16(0), u16(0), u16(0), u16(0), u32(0), u32(offset));
+      central.push(new Uint8Array(cen), name);
+      offset += local.length + name.length + size;
+    });
+    var cenSize = 0;
+    central.forEach(function (c) { cenSize += c.length; });
+    var end = [].concat(u32(0x06054b50), u16(0), u16(0), u16(files.length), u16(files.length), u32(cenSize), u32(offset), u16(0));
+    var all = chunks.concat(central, [new Uint8Array(end)]);
+    var total = 0; all.forEach(function (c) { total += c.length; });
+    var out = new Uint8Array(total), pos = 0;
+    all.forEach(function (c) { out.set(c, pos); pos += c.length; });
+    return out;
+  }
+
+  // ------------------------------------------------------------------ XLSX
+  function xmlEsc(s) {
+    return String(s)
+      .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, "")
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
+  function colLetter(i) { // 0 -> A
+    var s = ""; i++;
+    while (i > 0) { var m = (i - 1) % 26; s = String.fromCharCode(65 + m) + s; i = Math.floor((i - 1) / 26); }
+    return s;
+  }
+  function excelSerial(iso) {
+    var p = String(iso).split("-");
+    return Date.UTC(+p[0], +p[1] - 1, +p[2]) / 86400000 + 25569;
+  }
+
+  // Cell makers used when building sheets
+  var C = {
+    text: function (v) { return { t: "s", v: v == null ? "" : String(v) }; },
+    bold: function (v) { return { t: "s", v: v == null ? "" : String(v), s: 2 }; },
+    head: function (v) { return { t: "s", v: String(v), s: 1 }; },
+    title: function (v) { return { t: "s", v: String(v), s: 6 }; },
+    num: function (v) { return { t: "n", v: v, s: 5 }; },
+    dec: function (v) { return { t: "n", v: v, s: 0 }; },
+    date: function (iso) { return iso ? { t: "n", v: excelSerial(iso), s: 3 } : { t: "s", v: "" }; },
+    pct: function (frac) { return (frac === null || frac === undefined) ? { t: "s", v: "" } : { t: "n", v: Number(frac), s: 4 }; },
+    totalText: function (v) { return { t: "s", v: String(v), s: 7 }; },
+    totalNum: function (v) { return { t: "n", v: v, s: 8 }; },
+    totalPct: function (frac) { return (frac === null || frac === undefined) ? { t: "s", v: "", s: 7 } : { t: "n", v: Number(frac), s: 9 }; },
+    blank: function () { return null; }
+  };
+
+  var STYLES_XML =
+    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+    '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' +
+    '<numFmts count="2"><numFmt numFmtId="164" formatCode="dd\\ mmm\\ yyyy"/><numFmt numFmtId="165" formatCode="0.0%"/></numFmts>' +
+    '<fonts count="4">' +
+    '<font><sz val="11"/><name val="Calibri"/></font>' +
+    '<font><b/><sz val="11"/><name val="Calibri"/></font>' +
+    '<font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font>' +
+    '<font><b/><sz val="14"/><color rgb="FF0D1B2E"/><name val="Calibri"/></font>' +
+    '</fonts>' +
+    '<fills count="4"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill>' +
+    '<fill><patternFill patternType="solid"><fgColor rgb="FF0D1B2E"/><bgColor indexed="64"/></patternFill></fill>' +
+    '<fill><patternFill patternType="solid"><fgColor rgb="FFF1E7CB"/><bgColor indexed="64"/></patternFill></fill></fills>' +
+    '<borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders>' +
+    '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>' +
+    '<cellXfs count="10">' +
+    '<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>' +                                                    // 0 normal
+    '<xf numFmtId="0" fontId="2" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>' + // 1 header
+    '<xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/>' +                                       // 2 bold
+    '<xf numFmtId="164" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1" applyAlignment="1"><alignment horizontal="left"/></xf>' + // 3 date
+    '<xf numFmtId="165" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>' +                             // 4 percent
+    '<xf numFmtId="1" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>' +                               // 5 integer
+    '<xf numFmtId="0" fontId="3" fillId="0" borderId="0" xfId="0" applyFont="1"/>' +                                       // 6 title
+    '<xf numFmtId="0" fontId="1" fillId="3" borderId="0" xfId="0" applyFont="1" applyFill="1"/>' +                         // 7 total text
+    '<xf numFmtId="1" fontId="1" fillId="3" borderId="0" xfId="0" applyFont="1" applyFill="1" applyNumberFormat="1"/>' +   // 8 total int
+    '<xf numFmtId="165" fontId="1" fillId="3" borderId="0" xfId="0" applyFont="1" applyFill="1" applyNumberFormat="1"/>' + // 9 total pct
+    '</cellXfs>' +
+    '<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>' +
+    '</styleSheet>';
+
+  function safeSheetName(name, used) {
+    var n = String(name).replace(/[\[\]:*?\/\\]/g, " ").trim().slice(0, 31) || "Sheet";
+    var base = n, i = 2;
+    while (used[n.toLowerCase()]) { n = base.slice(0, 28) + " " + i++; }
+    used[n.toLowerCase()] = true;
+    return n;
+  }
+
+  // sheets: [{ name, widths:[number], freezeRows:number, rows:[[cell|null,...]] }]
+  function buildXlsx(sheets, logo) {
+    var used = {}, names = sheets.map(function (s) { return safeSheetName(s.name, used); });
+    var info = logo && logo.bytes ? jpegInfo(logo.bytes) : null, logoOk = !!info;
+    var files = [];
+    files.push({ name: "[Content_Types].xml", data: utf8(
+      '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+      '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">' +
+      '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>' +
+      '<Default Extension="xml" ContentType="application/xml"/>' + (logoOk ? '<Default Extension="jpg" ContentType="image/jpeg"/><Override PartName="/xl/drawings/drawing1.xml" ContentType="application/vnd.openxmlformats-officedocument.drawing+xml"/>' : '') +
+      '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>' +
+      '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>' +
+      sheets.map(function (s, i) {
+        return '<Override PartName="/xl/worksheets/sheet' + (i + 1) + '.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>';
+      }).join("") + '</Types>') });
+    files.push({ name: "_rels/.rels", data: utf8(
+      '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+      '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
+      '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>') });
+    files.push({ name: "xl/workbook.xml", data: utf8(
+      '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+      '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>' +
+      names.map(function (n, i) { return '<sheet name="' + xmlEsc(n) + '" sheetId="' + (i + 1) + '" r:id="rId' + (i + 1) + '"/>'; }).join("") +
+      '</sheets></workbook>') });
+    files.push({ name: "xl/_rels/workbook.xml.rels", data: utf8(
+      '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+      '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
+      sheets.map(function (s, i) {
+        return '<Relationship Id="rId' + (i + 1) + '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet' + (i + 1) + '.xml"/>';
+      }).join("") +
+      '<Relationship Id="rId' + (sheets.length + 1) + '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>') });
+    files.push({ name: "xl/styles.xml", data: utf8(STYLES_XML) });
+
+    sheets.forEach(function (sh, idx) {
+      var xml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+        '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheetViews><sheetView workbookViewId="0"' + (idx === 0 ? ' tabSelected="1"' : '') + '>';
+      if (sh.freezeRows) {
+        xml += '<pane ySplit="' + sh.freezeRows + '" topLeftCell="A' + (sh.freezeRows + 1) + '" activePane="bottomLeft" state="frozen"/>';
+      }
+      xml += '</sheetView></sheetViews><sheetFormatPr defaultRowHeight="15"/>';
+      if (sh.widths && sh.widths.length) {
+        xml += "<cols>" + sh.widths.map(function (w, i) {
+          return '<col min="' + (i + 1) + '" max="' + (i + 1) + '" width="' + w + '" customWidth="1"/>';
+        }).join("") + "</cols>";
+      }
+      xml += "<sheetData>";
+      sh.rows.forEach(function (row, r) {
+        var cells = "";
+        (row || []).forEach(function (cell, c) {
+          if (cell === null || cell === undefined) return;
+          if (typeof cell !== "object") cell = (typeof cell === "number") ? C.dec(cell) : C.text(cell);
+          var ref = colLetter(c) + (r + 1), s = cell.s ? ' s="' + cell.s + '"' : "";
+          if (cell.t === "n") {
+            if (Number.isFinite(cell.v)) cells += '<c r="' + ref + '"' + s + "><v>" + cell.v + "</v></c>";
+          } else {
+            var txt = String(cell.v);
+            cells += '<c r="' + ref + '"' + s + ' t="inlineStr"><is><t xml:space="preserve">' + xmlEsc(txt) + "</t></is></c>";
+          }
+        });
+        xml += '<row r="' + (r + 1) + '">' + cells + "</row>";
+      });
+      xml += "</sheetData>" + (logoOk && idx === 0 ? '<drawing r:id="rId1"/>' : "") + "</worksheet>";
+      files.push({ name: "xl/worksheets/sheet" + (idx + 1) + ".xml", data: utf8(xml) });
+    });
+    if (logoOk) {
+      var px = 9525, side = 96 * px; // 96 pixels square, shown next to the title
+      files.push({ name: "xl/media/image1.jpg", data: logo.bytes });
+      files.push({ name: "xl/worksheets/_rels/sheet1.xml.rels", data: utf8('<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing" Target="../drawings/drawing1.xml"/></Relationships>') });
+      files.push({ name: "xl/drawings/_rels/drawing1.xml.rels", data: utf8('<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="../media/image1.jpg"/></Relationships>') });
+      files.push({ name: "xl/drawings/drawing1.xml", data: utf8('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+        '<xdr:wsDr xmlns:xdr="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">' +
+        '<xdr:oneCellAnchor><xdr:from><xdr:col>0</xdr:col><xdr:colOff>' + (6 * px) + '</xdr:colOff><xdr:row>0</xdr:row><xdr:rowOff>' + (4 * px) + '</xdr:rowOff></xdr:from>' +
+        '<xdr:ext cx="' + side + '" cy="' + side + '"/>' +
+        '<xdr:pic><xdr:nvPicPr><xdr:cNvPr id="2" name="RCF logo" descr="RCF logo"/><xdr:cNvPicPr><a:picLocks noChangeAspect="1"/></xdr:cNvPicPr></xdr:nvPicPr>' +
+        '<xdr:blipFill><a:blip xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:embed="rId1"/><a:stretch><a:fillRect/></a:stretch></xdr:blipFill>' +
+        '<xdr:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="' + side + '" cy="' + side + '"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></xdr:spPr></xdr:pic><xdr:clientData/></xdr:oneCellAnchor></xdr:wsDr>') });
+    }
+    return zipStore(files);
+  }
+
+  // ------------------------------------------------------------------ PDF
+  // Widths of the built-in Helvetica fonts for characters 32..126 (1000 units per em).
+  var HELV = [278,278,355,556,556,889,667,191,333,333,389,584,278,333,278,278,556,556,556,556,556,556,556,556,556,556,278,278,584,584,584,556,1015,667,667,722,722,667,611,778,722,278,500,667,556,833,722,778,667,778,722,667,611,722,667,944,667,667,611,278,278,278,469,556,333,556,556,500,556,556,278,556,556,222,222,500,222,833,556,556,556,556,333,500,278,556,500,722,500,500,500,334,260,334,584];
+  var HELVB = [278,333,474,556,556,889,722,238,333,333,389,584,278,333,278,278,556,556,556,556,556,556,556,556,556,556,333,333,584,584,584,611,975,722,722,722,722,667,611,778,722,278,556,722,611,833,722,778,667,778,722,667,611,722,667,944,667,667,611,333,278,333,584,556,333,556,611,556,611,556,333,611,611,278,278,556,278,889,611,611,611,611,389,556,333,556,500,778,556,556,500,389,280,389,584];
+
+  var WIN1252 = { 0x20AC: 0x80, 0x201A: 0x82, 0x0192: 0x83, 0x201E: 0x84, 0x2026: 0x85, 0x2020: 0x86, 0x2021: 0x87, 0x02C6: 0x88,
+    0x2030: 0x89, 0x0160: 0x8A, 0x2039: 0x8B, 0x0152: 0x8C, 0x017D: 0x8E, 0x2018: 0x91, 0x2019: 0x92, 0x201C: 0x93, 0x201D: 0x94,
+    0x2022: 0x95, 0x2013: 0x96, 0x2014: 0x97, 0x02DC: 0x98, 0x2122: 0x99, 0x0161: 0x9A, 0x203A: 0x9B, 0x0153: 0x9C, 0x017E: 0x9E, 0x0178: 0x9F };
+
+  // Turns any text into characters the PDF's built-in font can show. Unknown characters become "?".
+  function pdfSafe(s) {
+    var out = "";
+    s = String(s == null ? "" : s);
+    for (var i = 0; i < s.length; i++) {
+      var cp = s.charCodeAt(i);
+      if (cp === 0x0A || cp === 0x0D || cp === 0x09) { out += " "; continue; }
+      if (cp >= 32 && cp <= 126) out += s[i];
+      else if (cp >= 0xA0 && cp <= 0xFF) out += s[i];
+      else if (WIN1252[cp]) out += String.fromCharCode(WIN1252[cp]);
+      else out += "?";
+    }
+    return out;
+  }
+  function textWidth(s, size, bold) {
+    var table = bold ? HELVB : HELV, w = 0;
+    for (var i = 0; i < s.length; i++) {
+      var c = s.charCodeAt(i);
+      w += (c >= 32 && c <= 126) ? table[c - 32] : 556;
+    }
+    return w * size / 1000;
+  }
+  function fitText(s, maxW, size, bold) {
+    s = pdfSafe(s);
+    if (textWidth(s, size, bold) <= maxW) return s;
+    var ell = "\u0085"; // the ellipsis character in the PDF's font encoding
+    while (s.length > 1 && textWidth(s + ell, size, bold) > maxW) s = s.slice(0, -1);
+    return s + ell;
+  }
+  function pdfEsc(s) { return s.replace(/\\/g, "\\\\").replace(/\(/g, "\\(").replace(/\)/g, "\\)"); }
+  function num(n) { return (Math.round(n * 100) / 100).toString(); }
+
+  // doc: { orientation, title, subtitle, sections:[{heading, note, columns:[{header,width,align}], rows:[[..]|{cells,bold}]}], generated }
+  // Reads the size and colour type of a JPEG so it can be placed in a PDF/Excel file without re-compressing it.
+  function jpegInfo(bytes) {
+    if (!bytes || bytes.length < 4 || bytes[0] !== 0xFF || bytes[1] !== 0xD8) return null;
+    var i = 2;
+    while (i + 9 < bytes.length) {
+      if (bytes[i] !== 0xFF) { i++; continue; }
+      var m = bytes[i + 1];
+      if (m >= 0xC0 && m <= 0xCF && m !== 0xC4 && m !== 0xC8 && m !== 0xCC) {
+        return { height: bytes[i + 5] * 256 + bytes[i + 6], width: bytes[i + 7] * 256 + bytes[i + 8], comps: bytes[i + 9] };
+      }
+      if (m === 0xD8 || (m >= 0xD0 && m <= 0xD7) || m === 0x01) { i += 2; continue; }
+      i += 2 + bytes[i + 2] * 256 + bytes[i + 3];
+    }
+    return null;
+  }
+
+  function buildPdf(doc) {
+    var land = doc.orientation === "landscape";
+    var PW = land ? 842 : 595, PH = land ? 595 : 842, M = 40;
+    var contentW = PW - 2 * M, headerH = 78, footerH = 34;
+    var pages = [], cur = null, y = 0;
+    var logo = (doc.logo && doc.logo.bytes && jpegInfo(doc.logo.bytes)) ? { bytes: doc.logo.bytes, info: jpegInfo(doc.logo.bytes) } : null;
+
+    function newPage() {
+      cur = { ops: [] };
+      pages.push(cur);
+      // Header band
+      cur.ops.push("0.051 0.106 0.18 rg " + num(0) + " " + num(PH - 62) + " " + num(PW) + " 62 re f");
+      if (logo) {
+        // the original picture, placed unchanged (no re-compression), with a thin gold frame
+        cur.ops.push("q 50 0 0 50 " + num(M) + " " + num(PH - 56) + " cm /Im1 Do Q");
+        cur.ops.push("0.788 0.663 0.38 RG 1 w " + num(M) + " " + num(PH - 56) + " 50 50 re S");
+      } else {
+        cur.ops.push("0.788 0.663 0.38 RG 1.5 w " + num(M) + " " + num(PH - 52) + " 40 40 re S");
+        cur.ops.push("BT /F2 15 Tf 0.788 0.663 0.38 rg " + num(M + 7) + " " + num(PH - 38) + " Td (RCF) Tj ET");
+      }
+      var tx = logo ? M + 62 : M + 52;
+      cur.ops.push("BT /F2 13 Tf 1 1 1 rg " + num(tx) + " " + num(PH - 28) + " Td (Redeem Christian Fellowship) Tj ET");
+      cur.ops.push("BT /F1 10 Tf 0.788 0.663 0.38 rg " + num(tx) + " " + num(PH - 44) + " Td (" + pdfEsc(pdfSafe("House of God's Revealed Glory")) + ") Tj ET");
+      var right = pdfSafe("Attendance Report");
+      cur.ops.push("BT /F1 10 Tf 1 1 1 rg " + num(PW - M - textWidth(right, 10, false)) + " " + num(PH - 36) + " Td (" + pdfEsc(right) + ") Tj ET");
+      y = PH - 62 - 24;
+      if (pages.length === 1) {
+        cur.ops.push("BT /F2 16 Tf 0.051 0.106 0.18 rg " + num(M) + " " + num(y) + " Td (" + pdfEsc(fitText(doc.title, contentW, 16, true)) + ") Tj ET");
+        y -= 16;
+        if (doc.subtitle) {
+          cur.ops.push("BT /F1 10 Tf 0.35 0.4 0.45 rg " + num(M) + " " + num(y) + " Td (" + pdfEsc(fitText(doc.subtitle, contentW, 10, false)) + ") Tj ET");
+          y -= 20;
+        }
+      }
+    }
+    function ensure(h) { if (!cur || y - h < footerH + 10) newPage(); }
+
+    function drawHeaderRow(cols, widths) {
+      ensure(40);
+      cur.ops.push("0.051 0.106 0.18 rg " + num(M) + " " + num(y - 14) + " " + num(contentW) + " 18 re f");
+      var x = M;
+      cols.forEach(function (c, i) {
+        var txt = fitText(c.header, widths[i] - 8, 8.5, true);
+        var tx = c.align === "right" ? x + widths[i] - 4 - textWidth(txt, 8.5, true) : x + 4;
+        cur.ops.push("BT /F2 8.5 Tf 1 1 1 rg " + num(tx) + " " + num(y - 9) + " Td (" + pdfEsc(txt) + ") Tj ET");
+        x += widths[i];
+      });
+      y -= 18;
+    }
+
+    (doc.sections || []).forEach(function (sec) {
+      ensure(60);
+      if (sec.heading) {
+        cur.ops.push("BT /F2 12 Tf 0.051 0.106 0.18 rg " + num(M) + " " + num(y) + " Td (" + pdfEsc(fitText(sec.heading, contentW, 12, true)) + ") Tj ET");
+        y -= 16;
+      }
+      if (sec.note) {
+        cur.ops.push("BT /F1 8.5 Tf 0.35 0.4 0.45 rg " + num(M) + " " + num(y) + " Td (" + pdfEsc(fitText(sec.note, contentW, 8.5, false)) + ") Tj ET");
+        y -= 14;
+      }
+      var cols = sec.columns, sum = 0;
+      cols.forEach(function (c) { sum += c.width || 1; });
+      var widths = cols.map(function (c) { return contentW * (c.width || 1) / sum; });
+      y -= 4;
+      drawHeaderRow(cols, widths);
+      if (!sec.rows.length) {
+        ensure(20);
+        cur.ops.push("BT /F1 9 Tf 0.35 0.4 0.45 rg " + num(M + 4) + " " + num(y - 12) + " Td (No records for this period.) Tj ET");
+        y -= 20;
+      }
+      sec.rows.forEach(function (row, ri) {
+        var cells = Array.isArray(row) ? row : row.cells, bold = !Array.isArray(row) && row.bold;
+        if (y - 16 < footerH + 10) { newPage(); drawHeaderRow(cols, widths); }
+        if (bold) cur.ops.push("0.945 0.906 0.796 rg " + num(M) + " " + num(y - 12) + " " + num(contentW) + " 16 re f");
+        else if (ri % 2 === 1) cur.ops.push("0.955 0.96 0.97 rg " + num(M) + " " + num(y - 12) + " " + num(contentW) + " 16 re f");
+        var x = M;
+        cells.forEach(function (cell, i) {
+          var txt = fitText(cell == null ? "" : cell, widths[i] - 8, 8.5, bold);
+          var tx = cols[i].align === "right" ? x + widths[i] - 4 - textWidth(txt, 8.5, bold) : x + 4;
+          cur.ops.push("BT /" + (bold ? "F2" : "F1") + " 8.5 Tf 0.1 0.12 0.16 rg " + num(tx) + " " + num(y - 8) + " Td (" + pdfEsc(txt) + ") Tj ET");
+          x += widths[i];
+        });
+        y -= 16;
+      });
+      y -= 14;
+    });
+    if (!cur) newPage();
+
+    // Footers (now we know the page count)
+    pages.forEach(function (p, i) {
+      p.ops.push("0.788 0.663 0.38 RG 0.5 w " + num(M) + " " + num(footerH + 4) + " m " + num(PW - M) + " " + num(footerH + 4) + " l S");
+      var values = pdfSafe("Worship · Fellowship · Discipleship · Impact");
+      p.ops.push("BT /F1 8 Tf 0.35 0.4 0.45 rg " + num(M) + " " + num(footerH - 8) + " Td (" + pdfEsc(values) + ") Tj ET");
+      var pg = "Page " + (i + 1) + " of " + pages.length;
+      p.ops.push("BT /F1 8 Tf 0.35 0.4 0.45 rg " + num(PW - M - textWidth(pg, 8, false)) + " " + num(footerH - 8) + " Td (" + pg + ") Tj ET");
+      if (doc.generated) {
+        var g = fitText(doc.generated, contentW, 8, false);
+        p.ops.push("BT /F1 8 Tf 0.35 0.4 0.45 rg " + num(M) + " " + num(footerH - 19) + " Td (" + pdfEsc(g) + ") Tj ET");
+      }
+    });
+
+    // Assemble file. Every character is one byte (0-255) so offsets can be counted exactly.
+    var out = "%PDF-1.4\n%\u00E2\u00E3\u00CF\u00D3\n", offsets = [];
+    function addObj(n, body) { offsets[n] = out.length; out += n + " 0 obj\n" + body + "\nendobj\n"; }
+    var nPages = pages.length;
+    addObj(1, "<< /Type /Catalog /Pages 2 0 R >>");
+    var kids = []; for (var i = 0; i < nPages; i++) kids.push((5 + i * 2) + " 0 R");
+    addObj(2, "<< /Type /Pages /Kids [" + kids.join(" ") + "] /Count " + nPages + " >>");
+    addObj(3, "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>");
+    addObj(4, "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>");
+    var imgObj = 5 + nPages * 2;
+    pages.forEach(function (p, i) {
+      var stream = p.ops.join("\n");
+      addObj(5 + i * 2, "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 " + PW + " " + PH + "] /Resources << /Font << /F1 3 0 R /F2 4 0 R >>" + (logo ? " /XObject << /Im1 " + imgObj + " 0 R >>" : "") + " >> /Contents " + (6 + i * 2) + " 0 R >>");
+      addObj(6 + i * 2, "<< /Length " + stream.length + " >>\nstream\n" + stream + "\nendstream");
+    });
+    if (logo) {
+      var raw = "";
+      for (var q = 0; q < logo.bytes.length; q += 8192) raw += String.fromCharCode.apply(null, logo.bytes.subarray(q, q + 8192));
+      var cs = logo.info.comps === 1 ? "/DeviceGray" : logo.info.comps === 4 ? "/DeviceCMYK" : "/DeviceRGB";
+      addObj(imgObj, "<< /Type /XObject /Subtype /Image /Width " + logo.info.width + " /Height " + logo.info.height + " /ColorSpace " + cs +
+        (logo.info.comps === 4 ? " /Decode [1 0 1 0 1 0 1 0]" : "") + " /BitsPerComponent 8 /Filter /DCTDecode /Length " + raw.length + " >>\nstream\n" + raw + "\nendstream");
+    }
+    var xrefPos = out.length, total = 5 + nPages * 2 + (logo ? 1 : 0);
+    out += "xref\n0 " + total + "\n0000000000 65535 f \n";
+    for (var n = 1; n < total; n++) out += ("0000000000" + offsets[n]).slice(-10) + " 00000 n \n";
+    out += "trailer\n<< /Size " + total + " /Root 1 0 R >>\nstartxref\n" + xrefPos + "\n%%EOF\n";
+    var bytes = new Uint8Array(out.length);
+    for (var k = 0; k < out.length; k++) bytes[k] = out.charCodeAt(k) & 255;
+    return bytes;
+  }
+
+  // ------------------------------------------------------------------ QR code
+  // Byte mode, error-correction level L or M, versions 1 to 15 (enough for web addresses).
+  var ECC_PER_BLOCK = { L: [0,7,10,15,20,26,18,20,24,30,18,20,24,26,30,22], M: [0,10,16,26,18,24,16,18,22,22,26,30,22,22,24,24] };
+  var NUM_BLOCKS    = { L: [0,1,1,1,1,1,2,2,2,2,4,4,4,4,4,6],              M: [0,1,1,1,2,2,4,4,4,5,5,5,8,9,9,10] };
+  var FORMAT_BITS   = { L: 1, M: 0 };
+
+  function rawModules(ver) {
+    var r = (16 * ver + 128) * ver + 64;
+    if (ver >= 2) { var na = Math.floor(ver / 7) + 2; r -= (25 * na - 10) * na - 55; if (ver >= 7) r -= 36; }
+    return r;
+  }
+  function alignPositions(ver) {
+    if (ver === 1) return [];
+    var na = Math.floor(ver / 7) + 2, size = ver * 4 + 17;
+    var step = Math.ceil((ver * 4 + 4) / (na * 2 - 2)) * 2;
+    var res = [6];
+    for (var pos = size - 7; res.length < na; pos -= step) res.splice(1, 0, pos);
+    return res;
+  }
+  function gfMul(x, y) {
+    var z = 0;
+    for (var i = 7; i >= 0; i--) { z = (z << 1) ^ ((z >>> 7) * 0x11D); z ^= ((y >>> i) & 1) * x; }
+    return z & 255;
+  }
+  function rsGenerator(degree) {
+    var res = []; for (var i = 0; i < degree - 1; i++) res.push(0); res.push(1);
+    var root = 1;
+    for (var d = 0; d < degree; d++) {
+      for (var j = 0; j < res.length; j++) {
+        res[j] = gfMul(res[j], root);
+        if (j + 1 < res.length) res[j] ^= res[j + 1];
+      }
+      root = gfMul(root, 2);
+    }
+    return res;
+  }
+  function rsRemainder(data, gen) {
+    var res = gen.map(function () { return 0; });
+    data.forEach(function (b) {
+      var factor = b ^ res.shift();
+      res.push(0);
+      gen.forEach(function (coef, i) { res[i] ^= gfMul(coef, factor); });
+    });
+    return res;
+  }
+
+  function qrEncode(text, preferred, forceMask) {
+    var data = Array.prototype.slice.call(utf8(text));
+    var ecl = preferred === "L" ? "L" : "M", ver = 0, tryList = ecl === "M" ? ["M", "L"] : ["L"];
+    outer:
+    for (var t = 0; t < tryList.length; t++) {
+      for (var v = 1; v <= 15; v++) {
+        var cap = Math.floor(rawModules(v) / 8) - ECC_PER_BLOCK[tryList[t]][v] * NUM_BLOCKS[tryList[t]][v];
+        var countBits = v < 10 ? 8 : 16;
+        if (4 + countBits + data.length * 8 <= cap * 8) { ecl = tryList[t]; ver = v; break outer; }
+      }
+    }
+    if (!ver) throw new Error("That web address is too long for a QR code here.");
+
+    var size = ver * 4 + 17;
+    var capacityBits = (Math.floor(rawModules(ver) / 8) - ECC_PER_BLOCK[ecl][ver] * NUM_BLOCKS[ecl][ver]) * 8;
+    var bits = [];
+    function put(val, len) { for (var i = len - 1; i >= 0; i--) bits.push((val >>> i) & 1); }
+    put(4, 4); put(data.length, ver < 10 ? 8 : 16);
+    data.forEach(function (b) { put(b, 8); });
+    put(0, Math.min(4, capacityBits - bits.length));
+    put(0, (8 - bits.length % 8) % 8);
+    for (var pad = 0xEC; bits.length < capacityBits; pad ^= 0xEC ^ 0x11) put(pad, 8);
+    var dataBytes = [];
+    for (var i = 0; i < bits.length; i += 8) {
+      var byte = 0; for (var k = 0; k < 8; k++) byte = (byte << 1) | bits[i + k]; dataBytes.push(byte);
+    }
+
+    // Split into blocks, add error-correction bytes, interleave
+    var nBlocks = NUM_BLOCKS[ecl][ver], eccLen = ECC_PER_BLOCK[ecl][ver];
+    var rawCw = Math.floor(rawModules(ver) / 8), nShort = nBlocks - rawCw % nBlocks, shortLen = Math.floor(rawCw / nBlocks);
+    var blocks = [], gen = rsGenerator(eccLen);
+    for (var b = 0, pos = 0; b < nBlocks; b++) {
+      var len = shortLen - eccLen + (b < nShort ? 0 : 1);
+      var dat = dataBytes.slice(pos, pos + len); pos += len;
+      var ecc = rsRemainder(dat, gen);
+      if (b < nShort) dat.push(0);
+      blocks.push(dat.concat(ecc));
+    }
+    var all = [];
+    for (var ii = 0; ii < blocks[0].length; ii++) {
+      for (var jj = 0; jj < blocks.length; jj++) {
+        if (ii !== shortLen - eccLen || jj >= nShort) all.push(blocks[jj][ii]);
+      }
+    }
+
+    // Draw the grid
+    var mod = [], fn = [];
+    for (var y = 0; y < size; y++) { mod.push(new Array(size).fill(false)); fn.push(new Array(size).fill(false)); }
+    function setFn(x, y, dark) { mod[y][x] = dark; fn[y][x] = true; }
+    function bit(x, i) { return ((x >>> i) & 1) !== 0; }
+    for (var d = 0; d < size; d++) { setFn(6, d, d % 2 === 0); setFn(d, 6, d % 2 === 0); }
+    function finder(cx, cy) {
+      for (var dy = -4; dy <= 4; dy++) for (var dx = -4; dx <= 4; dx++) {
+        var dist = Math.max(Math.abs(dx), Math.abs(dy)), xx = cx + dx, yy = cy + dy;
+        if (xx >= 0 && xx < size && yy >= 0 && yy < size) setFn(xx, yy, dist !== 2 && dist !== 4);
+      }
+    }
+    finder(3, 3); finder(size - 4, 3); finder(3, size - 4);
+    var ap = alignPositions(ver), last = ap.length - 1;
+    ap.forEach(function (px, a) { ap.forEach(function (py, b) {
+      if ((a === 0 && b === 0) || (a === 0 && b === last) || (a === last && b === 0)) return;
+      for (var dy = -2; dy <= 2; dy++) for (var dx = -2; dx <= 2; dx++) setFn(px + dx, py + dy, Math.max(Math.abs(dx), Math.abs(dy)) !== 1);
+    }); });
+    function formatBits(mask) {
+      var d2 = FORMAT_BITS[ecl] << 3 | mask, rem = d2;
+      for (var q = 0; q < 10; q++) rem = (rem << 1) ^ ((rem >>> 9) * 0x537);
+      var bts = ((d2 << 10) | rem) ^ 0x5412;
+      for (var a = 0; a <= 5; a++) setFn(8, a, bit(bts, a));
+      setFn(8, 7, bit(bts, 6)); setFn(8, 8, bit(bts, 7)); setFn(7, 8, bit(bts, 8));
+      for (var c = 9; c < 15; c++) setFn(14 - c, 8, bit(bts, c));
+      for (var e = 0; e < 8; e++) setFn(size - 1 - e, 8, bit(bts, e));
+      for (var f = 8; f < 15; f++) setFn(8, size - 15 + f, bit(bts, f));
+      setFn(8, size - 8, true);
+    }
+    formatBits(0); // reserve the spots
+    if (ver >= 7) {
+      var rem = ver;
+      for (var q2 = 0; q2 < 12; q2++) rem = (rem << 1) ^ ((rem >>> 11) * 0x1F25);
+      var vb = ver << 12 | rem;
+      for (var u = 0; u < 18; u++) { var col = bit(vb, u), a2 = size - 11 + u % 3, b2 = Math.floor(u / 3); setFn(a2, b2, col); setFn(b2, a2, col); }
+    }
+
+    // Place data bits in the zig-zag pattern
+    var bi = 0;
+    for (var right = size - 1; right >= 1; right -= 2) {
+      if (right === 6) right = 5;
+      for (var vert = 0; vert < size; vert++) {
+        for (var j = 0; j < 2; j++) {
+          var x = right - j, upward = ((right + 1) & 2) === 0, yy = upward ? size - 1 - vert : vert;
+          if (!fn[yy][x] && bi < all.length * 8) { mod[yy][x] = bit(all[bi >>> 3], 7 - (bi & 7)); bi++; }
+        }
+      }
+    }
+
+    function applyMask(mask) {
+      for (var yy2 = 0; yy2 < size; yy2++) for (var xx2 = 0; xx2 < size; xx2++) {
+        var inv;
+        switch (mask) {
+          case 0: inv = (xx2 + yy2) % 2 === 0; break;
+          case 1: inv = yy2 % 2 === 0; break;
+          case 2: inv = xx2 % 3 === 0; break;
+          case 3: inv = (xx2 + yy2) % 3 === 0; break;
+          case 4: inv = (Math.floor(xx2 / 3) + Math.floor(yy2 / 2)) % 2 === 0; break;
+          case 5: inv = xx2 * yy2 % 2 + xx2 * yy2 % 3 === 0; break;
+          case 6: inv = (xx2 * yy2 % 2 + xx2 * yy2 % 3) % 2 === 0; break;
+          default: inv = ((xx2 + yy2) % 2 + xx2 * yy2 % 3) % 2 === 0;
+        }
+        if (!fn[yy2][xx2] && inv) mod[yy2][xx2] = !mod[yy2][xx2];
+      }
+    }
+    function penalty() {
+      var result = 0;
+      function addHist(run, h) { if (h[0] === 0) run += size; h.pop(); h.unshift(run); }
+      function countPat(h) {
+        var n = h[1], core = n > 0 && h[2] === n && h[3] === n * 3 && h[4] === n && h[5] === n;
+        return (core && h[0] >= n * 4 && h[6] >= n ? 1 : 0) + (core && h[6] >= n * 4 && h[0] >= n ? 1 : 0);
+      }
+      function endCount(color, run, h) { if (color) { addHist(run, h); run = 0; } run += size; addHist(run, h); return countPat(h); }
+      for (var pass = 0; pass < 2; pass++) {
+        for (var a = 0; a < size; a++) {
+          var runColor = false, runLen = 0, hist = [0, 0, 0, 0, 0, 0, 0];
+          for (var b = 0; b < size; b++) {
+            var v2 = pass === 0 ? mod[a][b] : mod[b][a];
+            if (v2 === runColor) { runLen++; if (runLen === 5) result += 3; else if (runLen > 5) result++; }
+            else { addHist(runLen, hist); if (!runColor) result += countPat(hist) * 40; runColor = v2; runLen = 1; }
+          }
+          result += endCount(runColor, runLen, hist) * 40;
+        }
+      }
+      for (var y3 = 0; y3 < size - 1; y3++) for (var x3 = 0; x3 < size - 1; x3++) {
+        var c3 = mod[y3][x3];
+        if (c3 === mod[y3][x3 + 1] && c3 === mod[y3 + 1][x3] && c3 === mod[y3 + 1][x3 + 1]) result += 3;
+      }
+      var dark = 0; mod.forEach(function (row) { row.forEach(function (v3) { if (v3) dark++; }); });
+      var total = size * size;
+      result += (Math.ceil(Math.abs(dark * 20 - total * 10) / total) - 1) * 10;
+      return result;
+    }
+    var bestMask = 0, bestPen = Infinity;
+    for (var m = 0; m < 8 && forceMask === undefined; m++) {
+      applyMask(m); formatBits(m);
+      var pen = penalty();
+      if (pen < bestPen) { bestPen = pen; bestMask = m; }
+      applyMask(m); // undo
+    }
+    if (forceMask !== undefined) bestMask = forceMask;
+    applyMask(bestMask); formatBits(bestMask);
+    return { size: size, version: ver, ecl: ecl, modules: mod };
+  }
+
+  function qrToSvg(qr, opts) {
+    opts = opts || {};
+    var border = opts.border == null ? 4 : opts.border, dark = opts.dark || "#000000", light = opts.light || "#ffffff";
+    var dim = qr.size + border * 2, path = "";
+    for (var y = 0; y < qr.size; y++) for (var x = 0; x < qr.size; x++) {
+      if (qr.modules[y][x]) path += "M" + (x + border) + "," + (y + border) + "h1v1h-1z";
+    }
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + dim + " " + dim + '" shape-rendering="crispEdges">' +
+      '<rect width="100%" height="100%" fill="' + light + '"/><path d="' + path + '" fill="' + dark + '"/></svg>';
+  }
+
+  return { jpegInfo: jpegInfo, toCsv: toCsv, buildXlsx: buildXlsx, C: C, buildPdf: buildPdf, qrEncode: qrEncode, qrToSvg: qrToSvg, pdfSafe: pdfSafe, excelSerial: excelSerial };
+})();
+
+  </script>
+  <script>
+// ======================================================================================
+// RCF ATTENDANCE REPORT: DASHBOARD
+// One file, in labelled sections:
+//   1. Core helpers          5. Members
+//   2. Navigation            6. Reports and downloads
+//   3. Overview              7. QR code and link
+//   4. Attendance            8. Workers   9. Settings   10. Start-up
+// All data comes from Supabase functions that check who is asking (see supabase/stage4_attendance.sql).
+// ======================================================================================
+
+// ---------------------------------------------------------------- 1. CORE HELPERS
+var config = window.RCF_CONFIG || {};
+config.LEVELS = config.LEVELS || ["100 Level", "200 Level", "300 Level", "400 Level", "500 Level", "Postgraduate", "Other"];
+config.TIMEZONE = config.TIMEZONE || "Africa/Lagos";
+var CATEGORIES = ["First Timer", "New Convert", "Member"];
+var GENDERS = ["Male", "Female", "Prefer not to say"];
+
+var configured = !!(config.SUPABASE_URL && config.SUPABASE_ANON_KEY &&
+  config.SUPABASE_URL.indexOf("PASTE_") !== 0 && config.SUPABASE_ANON_KEY.indexOf("PASTE_") !== 0);
+var client = (configured && window.supabase)
+  ? window.supabase.createClient(config.SUPABASE_URL, config.SUPABASE_ANON_KEY)
+  : null;
+
+var state = {
+  user: null,          // signed-in login (id, email)
+  profile: null,       // { full_name, role }
+  isAdmin: false,
+  members: null,       // everyone registered (loaded once, refreshed after changes)
+  membersById: {}
+};
+
+function $(id) { return document.getElementById(id); }
+
+// Builds an element safely. Text always goes in as text (never as HTML), so names typed by
+// visitors cannot inject anything into the page.
+function h(tag, props) {
+  var el = document.createElement(tag);
+  props = props || {};
+  Object.keys(props).forEach(function (k) {
+    var v = props[k];
+    if (v === null || v === undefined || v === false) return;
+    if (k === "class") el.className = v;
+    else if (k === "text") el.textContent = v;
+    else if (k === "on") Object.keys(v).forEach(function (ev) { el.addEventListener(ev, v[ev]); });
+    else if (k === "value") el.value = v;
+    else if (k === "checked") el.checked = !!v;
+    else if (k === "disabled") el.disabled = !!v;
+    else el.setAttribute(k, v === true ? "" : v);
+  });
+  for (var i = 2; i < arguments.length; i++) append(el, arguments[i]);
+  return el;
+}
+function append(el, child) {
+  if (child === null || child === undefined || child === false) return;
+  if (Array.isArray(child)) { child.forEach(function (c) { append(el, c); }); return; }
+  el.appendChild(typeof child === "object" ? child : document.createTextNode(String(child)));
+}
+function clear(el) { while (el.firstChild) el.removeChild(el.firstChild); return el; }
+
+var SVG_NS = "http://www.w3.org/2000/svg";
+function icon(paths, size) {
+  var svg = document.createElementNS(SVG_NS, "svg");
+  svg.setAttribute("viewBox", "0 0 24 24"); svg.setAttribute("width", size || 20); svg.setAttribute("height", size || 20);
+  svg.setAttribute("fill", "none"); svg.setAttribute("stroke", "currentColor"); svg.setAttribute("stroke-width", "2");
+  svg.setAttribute("stroke-linecap", "round"); svg.setAttribute("stroke-linejoin", "round"); svg.setAttribute("aria-hidden", "true");
+  svg.innerHTML = paths; // our own fixed strings only, never user text
+  return svg;
+}
+
+// ---- dates (all in the church timezone, so "today" is the same for everyone)
+function todayISO() {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: config.TIMEZONE }).format(new Date(nowMs()));
+}
+// The church's date and time come from the database server, never from the phone or computer clock,
+// so changing a device's clock cannot change any record or any countdown.
+var clockOffset = 0;
+function nowMs() { return Date.now() + clockOffset; }
+async function syncClock() {
+  try {
+    var t0 = Date.now(), r = await rpc("server_time"), t1 = Date.now();
+    clockOffset = Date.parse(r.now) - (t0 + t1) / 2;
+  } catch (e) { /* if this fails the device clock is used for display only; the database still decides every record */ }
+}
+function parseISO(iso) { var p = String(iso).split("-"); return new Date(Date.UTC(+p[0], +p[1] - 1, +p[2])); }
+function fmtDate(iso) {
+  if (!iso) return "";
+  return new Intl.DateTimeFormat("en-GB", { dateStyle: "medium", timeZone: "UTC" }).format(parseISO(iso));
+}
+function fmtDateLong(iso) {
+  return new Intl.DateTimeFormat("en-GB", { dateStyle: "full", timeZone: "UTC" }).format(parseISO(iso));
+}
+function pad2(n) { return (n < 10 ? "0" : "") + n; }
+function monthBounds(y, m) { // m = 1..12
+  var last = new Date(Date.UTC(y, m, 0)).getUTCDate();
+  return { from: y + "-" + pad2(m) + "-01", to: y + "-" + pad2(m) + "-" + pad2(last) };
+}
+function yearBounds(y) { return { from: y + "-01-01", to: y + "-12-31" }; }
+var MONTH_NAMES = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+function fmtPct(frac) { return (frac === null || frac === undefined) ? "–" : (Math.round(Number(frac) * 1000) / 10).toFixed(1) + "%"; }
+function plural(n, one, many) { return n + " " + (n === 1 ? one : (many || one + "s")); }
+
+// ---- talking to Supabase
+// rpc() throws a plain Error with the database's own readable message.
+async function rpc(name, args) {
+  if (!client) throw new Error("The site is not connected to Supabase yet.");
+  var res = await client.rpc(name, args || {});
+  if (res.error) {
+    var msg = res.error.message || "Something went wrong";
+    if (/Failed to fetch|NetworkError|network/i.test(msg)) msg = "Could not reach the server. Please check your connection and try again.";
+    throw new Error(msg);
+  }
+  return res.data;
+}
+// Pages through a long list, 1000 rows at a time, so big churches are never cut off.
+async function rpcAll(name, args) {
+  var all = [], offset = 0;
+  for (;;) {
+    var a = Object.assign({}, args || {}, { p_offset: offset, p_limit: 1000 });
+    var rows = await rpc(name, a);
+    rows = rows || [];
+    all = all.concat(rows);
+    if (rows.length < 1000) break;
+    offset += 1000;
+  }
+  return all;
+}
+
+// ---- small pieces of interface
+var toastTimer = null;
+function toast(message, kind) {
+  var box = $("toast");
+  box.textContent = message;
+  box.className = "toast" + (kind === "error" ? " toast-error" : "");
+  box.hidden = false;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function () { box.hidden = true; }, kind === "error" ? 6000 : 3000);
+}
+function showBox(box, message, kind) {
+  box.textContent = message;
+  box.className = "alert " + (kind === "success" ? "alert-success" : kind === "info" ? "alert-info" : "alert-error");
+  box.hidden = false;
+}
+function emptyState(title, text, actionLabel, actionFn) {
+  return h("div", { class: "empty" }, h("strong", { text: title }), text ? h("p", { class: "muted", text: text }) : null,
+    actionLabel ? h("button", { type: "button", class: "btn btn-secondary", on: { click: actionFn }, text: actionLabel }) : null);
+}
+function categoryPill(cat) { return h("span", { class: "pill pill-" + cat.toLowerCase().replace(/\s+/g, "-"), text: cat }); }
+
+// A question with Cancel / Confirm. Returns a Promise<boolean>.
+function confirmDialog(title, message, confirmLabel, danger) {
+  return new Promise(function (resolve) {
+    var dlg = h("dialog", { class: "dlg", "aria-labelledby": "confirm-title" });
+    var done = function (v) { dlg.close(); dlg.remove(); resolve(v); };
+    dlg.appendChild(h("h2", { id: "confirm-title", text: title }));
+    dlg.appendChild(h("p", { text: message }));
+    dlg.appendChild(h("div", { class: "dlg-actions" },
+      h("button", { type: "button", class: "btn btn-secondary", on: { click: function () { done(false); } }, text: "Cancel" }),
+      h("button", { type: "button", class: "btn " + (danger ? "btn-danger" : "btn-primary"), on: { click: function () { done(true); } }, text: confirmLabel || "Confirm" })));
+    dlg.addEventListener("cancel", function (e) { e.preventDefault(); done(false); });
+    document.body.appendChild(dlg);
+    dlg.showModal();
+  });
+}
+
+// Downloads a file made in the browser
+function downloadBlob(filename, blob) {
+  var url = URL.createObjectURL(blob);
+  var a = h("a", { href: url, download: filename });
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+}
+
+// ---- the list of registered people (loaded once, searched in the browser)
+function phoneKey(phone) {
+  var d = String(phone || "").replace(/\D/g, "");
+  if (d.length === 13 && d.indexOf("234") === 0) d = "0" + d.slice(3);
+  else if (d.length === 10 && d[0] !== "0") d = "0" + d;
+  return d;
+}
+function nameKey(name) { return String(name || "").toLowerCase().replace(/[^a-z0-9\u00C0-\uFFFF ]/g, "").replace(/\s+/g, " ").trim(); }
+
+async function loadMembers(force) {
+  if (state.members && !force) return state.members;
+  var rows = await rpcAll("list_members");
+  rows.forEach(function (m) {
+    m._name = nameKey(m.full_name);
+    m._phone = phoneKey(m.phone);
+    m._search = (m.full_name + " " + (m.phone || "") + " " + m._phone).toLowerCase();
+  });
+  state.members = rows;
+  state.membersById = {};
+  rows.forEach(function (m) { state.membersById[m.id] = m; });
+  return rows;
+}
+function matchesSearch(m, query) {
+  var q = String(query || "").trim().toLowerCase();
+  if (!q) return true;
+  var digits = q.replace(/\D/g, "");
+  return q.split(/\s+/).every(function (part) { return m._search.indexOf(part) !== -1; }) ||
+         (digits.length >= 4 && m._phone.indexOf(phoneKey(digits)) !== -1);
+}
+
+// ---------------------------------------------------------------- 2. NAVIGATION
+var ICONS = {
+  overview: '<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>',
+  attendance: '<polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>',
+  members: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+  reports: '<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>',
+  qr: '<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3h-3zM20 14v3M14 20h3M20 20h1"/>',
+  workers: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
+  settings: '<line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/>'
+};
+var ROUTES = [
+  { id: "overview",   label: "Overview",   init: function () { return initOverview(); } },
+  { id: "attendance", label: "Attendance", init: function () { return initAttendance(); } },
+  { id: "members",    label: "Members",    init: function () { return initMembers(); } },
+  { id: "reports",    label: "Reports",    admin: true, init: function () { return initReports(); } },
+  { id: "qr",         label: "QR & Link",  init: function () { return initQr(); } },
+  { id: "workers",    label: "Workers",    admin: true, init: function () { return initWorkers(); } },
+  { id: "settings",   label: "Settings",   init: function () { return initSettings(); } }
+];
+var currentRoute = null;
+
+function allowedRoutes() { return ROUTES.filter(function (r) { return !r.admin || state.isAdmin; }); }
+
+function buildNav() {
+  var navs = [$("side-nav"), $("drawer-nav")];
+  navs.forEach(function (nav) {
+    clear(nav);
+    allowedRoutes().forEach(function (r) {
+      nav.appendChild(h("a", { class: "nav-item", href: "#" + r.id, "data-route": r.id },
+        icon(ICONS[r.id]), h("span", { text: r.label })));
+    });
+  });
+}
+
+function routeFromHash() {
+  var id = window.location.hash.replace("#", "");
+  var ok = allowedRoutes().some(function (r) { return r.id === id; });
+  return ok ? id : "overview";
+}
+
+async function showRoute() {
+  var id = routeFromHash();
+  closeDrawer();
+  ROUTES.forEach(function (r) { $("view-" + r.id).hidden = r.id !== id; });
+  document.querySelectorAll("[data-route]").forEach(function (a) {
+    if (a.getAttribute("data-route") === id) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
+  });
+  var route = ROUTES.filter(function (r) { return r.id === id; })[0];
+  document.title = route.label + " | RCF Attendance Report";
+  $("view-title").textContent = route.label;
+  currentRoute = id;
+  window.scrollTo(0, 0);
+  try { await route.init(); }
+  catch (err) { console.error(err); toast(err.message || "Something went wrong", "error"); }
+  var heading = $("view-title"); heading.setAttribute("tabindex", "-1"); heading.focus({ preventScroll: true });
+}
+
+function openDrawer() { $("drawer").hidden = false; $("menu-btn").setAttribute("aria-expanded", "true"); }
+function closeDrawer() { $("drawer").hidden = true; $("menu-btn").setAttribute("aria-expanded", "false"); }
+
+// ---------------------------------------------------------------- 3. OVERVIEW
+var overview = { preset: "month", from: null, to: null, built: false };
+
+function overviewRange() {
+  var t = todayISO(), y = +t.slice(0, 4), m = +t.slice(5, 7);
+  if (overview.preset === "month") return monthBounds(y, m);
+  if (overview.preset === "lastmonth") { return m === 1 ? monthBounds(y - 1, 12) : monthBounds(y, m - 1); }
+  if (overview.preset === "year") return yearBounds(y);
+  if (overview.preset === "lastyear") return yearBounds(y - 1);
+  return { from: $("ov-from").value, to: $("ov-to").value };
+}
+
+function buildOverviewShell() {
+  var view = $("view-overview");
+  clear(view);
+  var sel = h("select", { id: "ov-preset", "aria-label": "Reporting period" },
+    h("option", { value: "month", text: "This month" }),
+    h("option", { value: "lastmonth", text: "Last month" }),
+    h("option", { value: "year", text: "This year" }),
+    h("option", { value: "lastyear", text: "Last year" }),
+    h("option", { value: "custom", text: "Custom range" }));
+  var custom = h("div", { id: "ov-custom", class: "inline-fields", hidden: true },
+    h("label", { class: "date-field" }, h("span", { text: "From" }), h("input", { id: "ov-from", type: "date" })),
+    h("label", { class: "date-field" }, h("span", { text: "To" }), h("input", { id: "ov-to", type: "date" })),
+    h("button", { type: "button", class: "btn btn-secondary", text: "Apply", on: { click: loadOverview } }));
+  sel.addEventListener("change", function () {
+    overview.preset = sel.value; custom.hidden = sel.value !== "custom";
+    if (sel.value !== "custom") loadOverview();
+  });
+  var t = todayISO(); // sensible starting values for the custom range
+  view.appendChild(h("div", { class: "toolbar" },
+    h("div", { class: "toolbar-main" }, h("label", { for: "ov-preset", class: "toolbar-label", text: "Period" }), sel, custom),
+    h("p", { id: "ov-period-text", class: "muted small" })));
+  view.appendChild(h("div", { id: "ov-error", class: "alert alert-error", role: "alert", hidden: true }));
+  view.appendChild(h("div", { id: "ov-body" }));
+  overview.built = true;
+}
+
+function statCard(value, label, hint) {
+  return h("div", { class: "stat" }, h("span", { class: "stat-value", text: String(value) }), h("span", { class: "stat-label", text: label }),
+    hint ? h("span", { class: "stat-hint", text: hint }) : null);
+}
+
+// Simple bar chart (one colour, labelled values, hover text). Drawn as SVG so it scales on phones.
+function barChart(points, opts) {
+  opts = opts || {};
+  var W = 520, H = 240, padL = 30, padR = 8, padT = 24, padB = 44;
+  var max = Math.max.apply(null, points.map(function (p) { return p.value; }).concat([1]));
+  var n = points.length, slot = (W - padL - padR) / n, bw = Math.max(6, Math.min(36, slot * 0.6));
+  var svg = document.createElementNS(SVG_NS, "svg");
+  svg.setAttribute("viewBox", "0 0 " + W + " " + H); svg.setAttribute("class", "chart");
+  svg.setAttribute("role", "img"); svg.setAttribute("aria-label", opts.label || "Bar chart");
+  function el(tag, attrs, text) {
+    var e = document.createElementNS(SVG_NS, tag);
+    Object.keys(attrs).forEach(function (k) { e.setAttribute(k, attrs[k]); });
+    if (text !== undefined) e.textContent = text;
+    return e;
+  }
+  svg.appendChild(el("line", { x1: padL, x2: W - padR, y1: H - padB, y2: H - padB, class: "chart-axis" }));
+  [0.5, 1].forEach(function (f) {
+    var y = H - padB - (H - padB - padT) * f;
+    svg.appendChild(el("line", { x1: padL, x2: W - padR, y1: y, y2: y, class: "chart-grid" }));
+    svg.appendChild(el("text", { x: padL - 4, y: y + 4, class: "chart-tick", "text-anchor": "end" }, String(Math.round(max * f))));
+  });
+  var showEvery = n > 9 ? Math.ceil(n / 9) : 1;
+  points.forEach(function (p, i) {
+    var cx = padL + slot * i + slot / 2, bh = (H - padB - padT) * (p.value / max);
+    var g = el("g", {});
+    g.appendChild(el("title", {}, p.tip || (p.label + ": " + p.value)));
+    // rounded top, flat on the baseline
+    var x = cx - bw / 2, y = H - padB - bh, r = Math.min(4, bw / 2, bh);
+    var d = bh <= 0 ? "" : "M" + x + "," + (H - padB) + "V" + (y + r) + "Q" + x + "," + y + " " + (x + r) + "," + y + "H" + (x + bw - r) + "Q" + (x + bw) + "," + y + " " + (x + bw) + "," + (y + r) + "V" + (H - padB) + "Z";
+    if (d) g.appendChild(el("path", { d: d, class: "chart-bar" }));
+    g.appendChild(el("rect", { x: cx - slot / 2, y: padT, width: slot, height: H - padB - padT, fill: "transparent" })); // bigger hover target
+    if (n <= 16) g.appendChild(el("text", { x: cx, y: y - 5, class: "chart-value", "text-anchor": "middle" }, String(p.value)));
+    if (i % showEvery === 0) g.appendChild(el("text", { x: cx, y: H - padB + 16, class: "chart-label", "text-anchor": "middle" }, p.label));
+    svg.appendChild(g);
+  });
+  return svg;
+}
+
+function hBars(rows) { // rows: [{label, value}]
+  var max = Math.max.apply(null, rows.map(function (r) { return r.value; }).concat([1]));
+  return h("div", { class: "hbars" }, rows.map(function (r) {
+    return h("div", { class: "hbar-row" },
+      h("span", { class: "hbar-label", text: r.label }),
+      h("span", { class: "hbar-track" }, h("span", { class: "hbar-fill", style: "width:" + (r.value / max * 100) + "%" })),
+      h("span", { class: "hbar-value", text: String(r.value) }));
+  }));
+}
+
+async function loadOverview() {
+  var body = $("ov-body"), err = $("ov-error");
+  err.hidden = true;
+  var range = overviewRange();
+  if (!range.from || !range.to || range.to < range.from) { showBox(err, "Please choose a valid date range (the end date cannot be before the start date)."); return; }
+  $("ov-period-text").textContent = fmtDate(range.from) + " to " + fmtDate(range.to);
+  clear(body).appendChild(h("p", { class: "muted", text: "Loading…" }));
+  try {
+    var results = await Promise.all([
+      rpc("report_summary", { p_from: range.from, p_to: range.to }),
+      rpc("report_by_service", { p_from: range.from, p_to: range.to }),
+      rpc("recent_registrations", { p_limit: 8 })
+    ]);
+    var s = results[0], services = results[1] || [], recent = results[2] || [];
+    clear(body);
+
+    if (s.services === 0) {
+      body.appendChild(h("div", { class: "card" }, emptyState("No services recorded in this period yet",
+        "Create a service and mark attendance, and your figures will appear here.", "Go to Attendance", function () { window.location.hash = "#attendance"; })));
+    } else {
+      var uc = s.unique_attendees_by_category;
+      body.appendChild(h("h2", { class: "section-title", text: "Attendance" }));
+      body.appendChild(h("div", { class: "stats" },
+        statCard(s.services, "Services held", s.services_taken < s.services ? s.services_taken + " with attendance taken" : null),
+        statCard(s.present_entries, "Total attendance", "Present entries"),
+        statCard(s.unique_attendees, "People who attended", "Counted once each"),
+        statCard(uc["First Timer"], "First Timers", "who attended"),
+        statCard(uc["New Convert"], "New Converts", "who attended"),
+        statCard(uc["Member"], "Members", "who attended")));
+    }
+    body.appendChild(h("h2", { class: "section-title", text: "Registrations" }));
+    var rc = s.registered_in_period_by_category;
+    body.appendChild(h("div", { class: "stats stats-3" },
+      statCard(s.registered_total, "Total registered", "up to " + fmtDate(range.to)),
+      statCard(s.registered_in_period, "New in this period", rc["First Timer"] + " first timers · " + rc["New Convert"] + " new converts · " + rc.Member + " members")));
+
+    if (s.services > 0) {
+      var withData = services.filter(function (x) { return x.present > 0 || x.absent > 0; });
+      var shown = withData.slice(-16);
+      var charts = h("div", { class: "chart-grid-2" });
+      var c1 = h("div", { class: "card" }, h("h2", { text: "Attendance by service" }));
+      if (shown.length) {
+        c1.appendChild(barChart(shown.map(function (x) {
+          return { label: fmtDate(x.service_date).replace(/ \d{4}$/, ""), value: x.present, tip: x.title + ", " + fmtDate(x.service_date) + ": " + x.present + " present" };
+        }), { label: "Present count for each service" }));
+        if (withData.length > shown.length) c1.appendChild(h("p", { class: "muted small", text: "Showing the latest " + shown.length + " services. All services are in Reports." }));
+      } else c1.appendChild(h("p", { class: "muted", text: "No attendance has been marked yet." }));
+      var c2 = h("div", { class: "card" }, h("h2", { text: "Who attended, by category" }),
+        hBars(CATEGORIES.map(function (c) { return { label: c, value: uc[c] }; })),
+        h("p", { class: "muted small", text: "People counted once each, using their current category." }));
+      charts.appendChild(c1); charts.appendChild(c2);
+      body.appendChild(charts);
+
+      // The same numbers as a table (for screen readers, and for anyone who prefers numbers)
+      var rows = services.map(function (x) {
+        return h("tr", null,
+          h("td", { "data-label": "Date", text: fmtDate(x.service_date) }), h("td", { "data-label": "Service", text: svcTitle(x) }),
+          h("td", { "data-label": "Present", text: String(x.present) }), h("td", { "data-label": "Absent", text: String(x.absent) }));
+      });
+      body.appendChild(h("details", { class: "card details" }, h("summary", { text: "See the numbers for each service" }),
+        h("table", { class: "table" }, h("thead", null, h("tr", null, ["Date", "Service", "Present", "Absent"].map(function (t) { return h("th", { text: t }); }))), h("tbody", null, rows))));
+    }
+
+    var recentCard = h("div", { class: "card" }, h("h2", { text: "Latest registrations" }));
+    if (!recent.length) recentCard.appendChild(emptyState("No registrations yet", "They will appear here as soon as someone registers."));
+    else recentCard.appendChild(h("table", { class: "table" }, h("thead", null, h("tr", null, ["Name", "Level", "Category", "Date"].map(function (t) { return h("th", { text: t }); }))),
+      h("tbody", null, recent.map(function (r) {
+        return h("tr", null, h("td", { "data-label": "Name", text: r.full_name }), h("td", { "data-label": "Level", text: r.level }),
+          h("td", { "data-label": "Category" }, categoryPill(r.category)), h("td", { "data-label": "Date", text: fmtDate(r.registered_on) }));
+      }))));
+    body.appendChild(recentCard);
+  } catch (e) {
+    console.error(e);
+    clear(body);
+    showBox(err, "We couldn't load the figures. " + (e.message || "") + " Please refresh the page.");
+  }
+}
+
+async function initOverview() {
+  if (!overview.built) buildOverviewShell();
+  await loadOverview();
+}
+
+// ---------------------------------------------------------------- 4. ATTENDANCE
+// Present = confirmed there. Absent = marked absent, or not marked within 24 hours of the service (automatic).
+var att = { date: null, services: [], serviceId: null, map: {}, meta: {}, filter: "all", query: "", shown: 40, built: false, busy: {} };
+
+function currentService() {
+  return att.services.filter(function (s) { return s.id === att.serviceId; })[0] || null;
+}
+
+function buildAttendanceShell() {
+  var view = $("view-attendance");
+  clear(view);
+  att.date = todayISO();
+  var dateInput = h("input", { id: "att-date", type: "date", value: att.date });
+  dateInput.addEventListener("change", function () { if (dateInput.value) { att.date = dateInput.value; att.serviceId = null; loadAttendanceServices(); } });
+  view.appendChild(h("div", { class: "card" },
+    h("h2", { text: "Service" }),
+    h("div", { class: "att-pick" },
+      h("div", { class: "field" }, h("label", { for: "att-date", text: "Service date" }), dateInput),
+      h("button", { type: "button", class: "btn btn-secondary", text: "Today", on: { click: function () { att.date = todayISO(); dateInput.value = att.date; att.serviceId = null; loadAttendanceServices(); } } })),
+    h("div", { id: "att-services", class: "chips", role: "group", "aria-label": "Services on this date" }),
+    h("form", { id: "att-new", class: "new-service" },
+      h("label", { for: "att-title", class: "sr-label", text: "New service name" }),
+      h("input", { id: "att-title", type: "text", maxlength: "80", placeholder: "New service name, e.g. Sunday Service", list: "att-title-list", autocomplete: "off" }),
+      h("datalist", { id: "att-title-list" }, ["Sunday Service", "Midweek Service", "Special Service", "Prayer Meeting"].map(function (t) { return h("option", { value: t }); })),
+      h("button", { type: "submit", class: "btn btn-primary", text: "Create service" })),
+    h("div", { id: "att-error", class: "alert alert-error", role: "alert", hidden: true })));
+  $("att-new").addEventListener("submit", createService);
+
+  view.appendChild(h("div", { id: "att-panel" }));
+  att.built = true;
+}
+
+async function createService(e) {
+  e.preventDefault();
+  var input = $("att-title"), err = $("att-error"), btn = e.target.querySelector("button");
+  err.hidden = true;
+  var title = input.value.trim();
+  if (title.length < 2) { showBox(err, "Please type a name for the service (at least 2 letters)."); input.focus(); return; }
+  btn.disabled = true;
+  try {
+    var res = await rpc("create_service", { p_date: att.date, p_title: title });
+    input.value = "";
+    att.serviceId = res.id;
+    await loadAttendanceServices();
+    toast(res.existed ? "That service already exists. It has been opened." : "Service created.");
+  } catch (ex) { showBox(err, ex.message); }
+  btn.disabled = false;
+}
+
+async function loadAttendanceServices() {
+  var chips = $("att-services");
+  try {
+    att.services = (await rpc("list_services", { p_from: att.date, p_to: att.date })) || [];
+  } catch (ex) { showBox($("att-error"), ex.message); return; }
+  if (!currentService()) att.serviceId = att.services.length ? att.services[0].id : null;
+  clear(chips);
+  if (!att.services.length) chips.appendChild(h("p", { class: "muted", text: "No service has been created for " + fmtDate(att.date) + " yet. Type a name below to create one." }));
+  att.services.forEach(function (s) {
+    chips.appendChild(h("button", { type: "button", class: "chip", "aria-pressed": String(s.id === att.serviceId), on: { click: function () { att.serviceId = s.id; loadAttendanceServices(); } } },
+      s.title, h("span", { class: "chip-count", text: s.present + " present" })));
+  });
+  await loadServiceMarks();
+}
+
+async function loadServiceMarks() {
+  var panel = $("att-panel");
+  var svc = currentService();
+  clear(panel);
+  if (!svc) return;
+  panel.appendChild(h("p", { class: "muted", text: "Loading…" }));
+  try {
+    var results = await Promise.all([loadMembers(false), rpcAll("service_attendance", { p_service: svc.id })]);
+    att.map = {}; att.meta = {};
+    results[1].forEach(function (r) { att.map[r.member_id] = r.status; att.meta[r.member_id] = { at: r.marked_at, by: r.marked_by_name }; });
+  } catch (ex) { clear(panel); showBox($("att-error"), ex.message); return; }
+  att.filter = "all"; att.query = ""; att.shown = 40;
+  buildMarkingPanel();
+}
+
+// ---- the 24-hour rule (the database enforces it; this only mirrors it for display)
+function svcIsOpen(svc) { return nowMs() < Date.parse(svc.closes_at); }
+function nobodyMarked() { return Object.keys(att.map).length === 0; }
+// What to show for one person at the open service: present / absent / waiting, or hidden
+function attState(m, svc) {
+  var st = att.map[m.id];
+  if (st) return { st: st, auto: false };
+  if (svcIsOpen(svc)) return { st: "waiting" };
+  if (nobodyMarked()) return state.isAdmin ? { st: "waiting" } : { st: "hidden" };   // attendance was never taken
+  if (m.registered_on <= svc.service_date) return { st: "absent", auto: true };      // 24 hours passed without a mark
+  return { st: "hidden" };
+}
+function fmtStamp(ts) {
+  return new Intl.DateTimeFormat("en-GB", { timeZone: config.TIMEZONE, day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }).format(new Date(ts));
+}
+function timeLeftText(svc) {
+  var mins = Math.max(0, Math.round((Date.parse(svc.closes_at) - nowMs()) / 60000));
+  if (mins >= 120) return "about " + Math.round(mins / 60) + " hours left";
+  if (mins >= 60) return "about 1 hour left";
+  return mins <= 1 ? "closing now" : mins + " minutes left";
+}
+function attCounts() {
+  var svc = currentService(), c = { present: 0, absent: 0, waiting: 0, all: 0 };
+  state.members.forEach(function (m) {
+    var v = attState(m, svc);
+    if (v.st === "hidden") return;
+    c.all++; c[v.st]++;
+  });
+  return c;
+}
+function recountService() {
+  var svc = currentService(), c = attCounts();
+  svc.present = c.present; svc.absent = c.absent;
+  var chips = document.querySelectorAll("#att-services .chip-count");
+  att.services.forEach(function (x, i) { if (chips[i]) chips[i].textContent = x.present + " present"; });
+}
+
+function windowBanner(svc) {
+  if (svcIsOpen(svc)) {
+    return h("div", { class: "att-banner att-banner-open", role: "status" },
+      h("strong", { text: "Marking is open · " + timeLeftText(svc) }),
+      h("span", { text: " Until " + fmtStamp(svc.closes_at) + ". After that, anyone not marked is counted absent automatically." }));
+  }
+  return h("div", { class: "att-banner att-banner-closed", role: "status" },
+    h("strong", { text: "Marking closed on " + fmtStamp(svc.closes_at) + "." }),
+    h("span", { text: nobodyMarked() ? " Attendance was never taken for this service, so it is not counted in reports." : " People who were not marked are counted absent. Only an administrator can change marks now." }));
+}
+
+function buildMarkingPanel() {
+  var panel = clear($("att-panel")), svc = currentService();
+  var head = h("div", { class: "card" },
+    h("div", { class: "svc-head" },
+      h("div", null, h("h2", { text: svc.title }), h("p", { class: "muted", text: fmtDateLong(svc.service_date) })),
+      (state.isAdmin && att.map && !Object.keys(att.map).length)
+        ? h("button", { type: "button", class: "btn btn-secondary btn-sm", text: "Delete this empty service", on: { click: deleteService } }) : null),
+    windowBanner(svc),
+    h("div", { id: "att-tabs", class: "tabs tabs-3", role: "group", "aria-label": "Show people" }),
+    h("div", { class: "field" }, h("label", { for: "att-search", class: "sr-label", text: "Search by name or phone number" }),
+      h("input", { id: "att-search", type: "search", placeholder: "Search by name or phone number", autocomplete: "off", "aria-controls": "att-list" })),
+    h("div", { id: "att-list", class: "att-list" }),
+    h("div", { class: "center" }, h("button", { id: "att-more", type: "button", class: "btn btn-secondary", hidden: true, text: "Show more" })));
+  panel.appendChild(head);
+  $("att-search").addEventListener("input", function (e) { att.query = e.target.value; att.shown = 40; renderAttList(); });
+  $("att-more").addEventListener("click", function () { att.shown += 40; renderAttList(); });
+  renderAttTabs(); renderAttList();
+}
+
+async function deleteService() {
+  var svc = currentService();
+  if (!(await confirmDialog("Delete this service?", "“" + svc.title + "” on " + fmtDate(svc.service_date) + " has no attendance marks. It will be removed.", "Delete", true))) return;
+  try { await rpc("admin_delete_service", { p_service: svc.id }); att.serviceId = null; await loadAttendanceServices(); toast("Service deleted."); }
+  catch (ex) { toast(ex.message, "error"); }
+}
+
+function renderAttTabs() {
+  var c = attCounts(), tabs = clear($("att-tabs"));
+  [["all", "All", c.all], ["present", "Present", c.present], ["absent", "Absent", c.absent]].forEach(function (t) {
+    tabs.appendChild(h("button", { type: "button", class: "tab tab-" + t[0], "aria-pressed": String(att.filter === t[0]),
+      on: { click: function () { att.filter = t[0]; att.shown = 40; renderAttTabs(); renderAttList(); } } },
+      h("span", { class: "tab-num", text: String(t[2]) }), h("span", { text: t[1] })));
+  });
+}
+
+var SECTION_INFO = {
+  waiting: { title: "To be marked", note: "Tap Present or Absent for each person. Once marked, they move to the section below." },
+  present: { title: "Marked present", note: "" },
+  absent:  { title: "Absent", note: "" }
+};
+
+function attRow(m, v, svc, canChange) {
+  var busy = !!att.busy[m.id], meta = att.meta[m.id];
+  var info = h("div", { class: "att-info" },
+    h("strong", { text: m.full_name }),
+    h("span", { class: "muted small", text: [m.gender, m.level, m.department].join(" · ") + (m.phone ? " · " + m.phone : "") }),
+    h("span", { class: "att-tags" }, categoryPill(m.category),
+      m.registered_on > svc.service_date ? h("span", { class: "pill pill-note", text: "Registered after this service" }) : null));
+  if (v.st === "waiting") {
+    return h("div", { class: "att-row" }, info,
+      h("div", { class: "att-actions" },
+        h("button", { type: "button", class: "seg seg-present", disabled: busy, text: "Present", on: { click: function () { markOne(m.id, "present"); } } }),
+        h("button", { type: "button", class: "seg seg-absent", disabled: busy, text: "Absent", on: { click: function () { markOne(m.id, "absent"); } } })));
+  }
+  var other = v.st === "present" ? "absent" : "present";
+  var stamp = v.auto ? "Not marked within 24 hours" : (meta && meta.at ? "Marked " + fmtStamp(meta.at) + (meta.by ? " by " + meta.by : "") : "");
+  return h("div", { class: "att-row is-" + v.st + " is-done" }, info,
+    h("div", { class: "att-state" },
+      h("span", { class: "state-badge state-" + v.st, text: (v.st === "present" ? "✓ Present" : "Absent") + (v.auto ? " (automatic)" : "") }),
+      stamp ? h("span", { class: "muted small", text: stamp }) : null,
+      canChange ? h("button", { type: "button", class: "link-btn small", disabled: busy, text: "Change to " + (other === "present" ? "Present" : "Absent"), on: { click: function () { markOne(m.id, other); } } }) : null,
+      (canChange && state.isAdmin && !v.auto) ? h("button", { type: "button", class: "link-btn small", disabled: busy, text: "Undo", title: "Remove this mark", on: { click: function () { clearOne(m.id); } } }) : null));
+}
+
+function renderAttList() {
+  var svc = currentService(), list = clear($("att-list")), open = svcIsOpen(svc), canChange = open || state.isAdmin;
+  var groups = { waiting: [], present: [], absent: [] };
+  state.members.forEach(function (m) {
+    if (!matchesSearch(m, att.query)) return;
+    var v = attState(m, svc);
+    if (v.st === "hidden") return;
+    if (att.filter !== "all" && att.filter !== v.st) return;
+    groups[v.st].push({ m: m, v: v });
+  });
+  var total = groups.waiting.length + groups.present.length + groups.absent.length;
+  if (!state.members.length) {
+    list.appendChild(emptyState("No one has registered yet", "People appear here after they register on the public page."));
+  } else if (!total) {
+    list.appendChild(emptyState("No one matches", att.query ? "Try a different spelling or part of the phone number." : "Nobody is in this group yet."));
+  }
+  var budget = att.shown, rowsLeft = 0;
+  ["waiting", "present", "absent"].forEach(function (key) {
+    var g = groups[key];
+    if (!g.length) return;
+    if (budget <= 0) { rowsLeft += g.length; return; }
+    list.appendChild(h("div", { class: "att-section att-section-" + key },
+      h("strong", { text: SECTION_INFO[key].title + " · " + g.length }),
+      (key === "waiting" && att.filter === "all" && !att.query) ? h("span", { class: "muted small", text: SECTION_INFO.waiting.note }) : null));
+    g.slice(0, budget).forEach(function (x) { list.appendChild(attRow(x.m, x.v, svc, canChange)); });
+    rowsLeft += Math.max(0, g.length - budget); budget -= g.length;
+  });
+  $("att-more").hidden = rowsLeft <= 0;
+  $("att-more").textContent = "Show more (" + rowsLeft + " left)";
+}
+
+async function markOne(memberId, status) {
+  if (att.busy[memberId] || att.map[memberId] === status) return;
+  var name = (state.membersById[memberId] || {}).full_name || "Person";
+  att.busy[memberId] = true; renderAttList();
+  try {
+    await rpc("mark_attendance", { p_member: memberId, p_service: att.serviceId, p_status: status });
+    att.map[memberId] = status; // only after the database confirmed it
+    att.meta[memberId] = { at: new Date(nowMs()).toISOString(), by: displayName(state.profile) };
+    toast(name + " marked " + status + ".");
+  } catch (ex) { toast("Not saved: " + ex.message, "error"); }
+  delete att.busy[memberId];
+  recountService(); renderAttTabs(); renderAttList();
+}
+async function clearOne(memberId) {
+  if (att.busy[memberId]) return;
+  att.busy[memberId] = true; renderAttList();
+  try {
+    await rpc("clear_attendance", { p_member: memberId, p_service: att.serviceId });
+    delete att.map[memberId]; delete att.meta[memberId];
+  } catch (ex) { toast("Not saved: " + ex.message, "error"); }
+  delete att.busy[memberId];
+  recountService(); renderAttTabs(); renderAttList();
+}
+
+async function initAttendance() {
+  if (!att.built) { buildAttendanceShell(); await loadAttendanceServices(); }
+  else { state.members = null; await loadAttendanceServices(); } // pick up people who registered since last time
+}
+
+// ---------------------------------------------------------------- 5. MEMBERS
+var mem = { query: "", cat: "", level: "", dept: "", shown: 50, built: false };
+var DISMISSED_KEY = "rcf-not-duplicates";
+
+function dismissedSet() { try { return JSON.parse(localStorage.getItem(DISMISSED_KEY) || "{}"); } catch (e) { return {}; } }
+function dismissGroup(key) { var d = dismissedSet(); d[key] = 1; try { localStorage.setItem(DISMISSED_KEY, JSON.stringify(d)); } catch (e) {} }
+
+// Possible duplicates: the same phone number, or the same name. Only a person decides what is a real duplicate.
+function findDuplicateGroups() {
+  var parent = {};
+  function find(x) { while (parent[x] !== x) { parent[x] = parent[parent[x]]; x = parent[x]; } return x; }
+  function union(a, b) { parent[find(a)] = find(b); }
+  state.members.forEach(function (m) { parent[m.id] = m.id; });
+  var byPhone = {}, byName = {}, why = {};
+  state.members.forEach(function (m) {
+    if (m._phone.length >= 10) (byPhone[m._phone] = byPhone[m._phone] || []).push(m);
+    if (m._name.length >= 4) (byName[m._name] = byName[m._name] || []).push(m);
+  });
+  [[byPhone, "same phone number"], [byName, "same name"]].forEach(function (pair) {
+    Object.keys(pair[0]).forEach(function (k) {
+      var arr = pair[0][k];
+      if (arr.length < 2) return;
+      arr.forEach(function (m) { union(arr[0].id, m.id); });
+      arr.forEach(function (m) { (why[m.id] = why[m.id] || {})[pair[1]] = 1; });
+    });
+  });
+  var groups = {};
+  state.members.forEach(function (m) { var r = find(m.id); (groups[r] = groups[r] || []).push(m); });
+  var dismissed = dismissedSet();
+  return Object.keys(groups).map(function (r) {
+    var g = groups[r];
+    if (g.length < 2) return null;
+    var key = g.map(function (m) { return m.id; }).sort().join("|"), reasons = {};
+    g.forEach(function (m) { Object.keys(why[m.id] || {}).forEach(function (w) { reasons[w] = 1; }); });
+    return { key: key, members: g, reasons: Object.keys(reasons) };
+  }).filter(function (g) { return g && !dismissed[g.key]; }).sort(function (a, b) { return b.members.length - a.members.length; });
+}
+
+function buildMembersShell() {
+  var view = clear($("view-members"));
+  var levelSel = h("select", { id: "mem-level", "aria-label": "Filter by level" }, h("option", { value: "", text: "All levels" }));
+  var catSel = h("select", { id: "mem-cat", "aria-label": "Filter by category" }, h("option", { value: "", text: "All categories" }),
+    CATEGORIES.map(function (c) { return h("option", { value: c, text: c }); }));
+  view.appendChild(h("div", { class: "card" },
+    h("div", { class: "filters" },
+      h("div", { class: "field grow" }, h("label", { for: "mem-search", class: "sr-label", text: "Search by name or phone number" }),
+        h("input", { id: "mem-search", type: "search", placeholder: "Search by name or phone number", autocomplete: "off" })),
+      h("div", { class: "field" }, catSel), h("div", { class: "field" }, levelSel),
+      h("div", { class: "field" }, h("label", { for: "mem-dept", class: "sr-label", text: "Department" }), h("input", { id: "mem-dept", type: "search", placeholder: "Department", autocomplete: "off" }))),
+    h("div", { class: "toolbar-row" },
+      h("p", { id: "mem-count", class: "muted small", role: "status" }),
+      h("div", { class: "toolbar-actions" },
+        h("button", { id: "mem-dups-btn", type: "button", class: "btn btn-secondary btn-sm", "aria-expanded": "false", text: "Possible duplicates" }),
+        h("button", { type: "button", class: "btn btn-secondary btn-sm", text: "Refresh", on: { click: function () { refreshMembers(); } } }))),
+    h("div", { id: "mem-dups", class: "dups", hidden: true }),
+    h("div", { id: "mem-list" }),
+    h("div", { class: "center" }, h("button", { id: "mem-more", type: "button", class: "btn btn-secondary", hidden: true }))));
+  var rerender = function () { mem.shown = 50; renderMembers(); };
+  $("mem-search").addEventListener("input", function (e) { mem.query = e.target.value; rerender(); });
+  $("mem-dept").addEventListener("input", function (e) { mem.dept = e.target.value; rerender(); });
+  catSel.addEventListener("change", function () { mem.cat = catSel.value; rerender(); });
+  levelSel.addEventListener("change", function () { mem.level = levelSel.value; rerender(); });
+  $("mem-more").addEventListener("click", function () { mem.shown += 50; renderMembers(); });
+  $("mem-dups-btn").addEventListener("click", function () {
+    var box = $("mem-dups"); box.hidden = !box.hidden;
+    $("mem-dups-btn").setAttribute("aria-expanded", String(!box.hidden)); if (!box.hidden) renderDuplicates();
+  });
+  mem.built = true;
+}
+
+async function refreshMembers() {
+  try { await loadMembers(true); renderMembers(); toast("List refreshed."); } catch (ex) { toast(ex.message, "error"); }
+}
+
+function renderMembers() {
+  var list = clear($("mem-list"));
+  var levels = {}; config.LEVELS.forEach(function (l) { levels[l] = 1; }); state.members.forEach(function (m) { levels[m.level] = 1; });
+  var sel = $("mem-level"), keep = sel.value;
+  if (sel.options.length - 1 !== Object.keys(levels).length) {
+    while (sel.options.length > 1) sel.remove(1);
+    Object.keys(levels).forEach(function (l) { sel.appendChild(h("option", { value: l, text: l })); });
+    sel.value = keep;
+  }
+  var dq = mem.dept.trim().toLowerCase();
+  var rows = state.members.filter(function (m) {
+    return matchesSearch(m, mem.query) && (!mem.cat || m.category === mem.cat) && (!mem.level || m.level === mem.level) &&
+           (!dq || m.department.toLowerCase().indexOf(dq) !== -1);
+  });
+  $("mem-count").textContent = rows.length === state.members.length ? plural(rows.length, "person", "people") : "Showing " + rows.length + " of " + state.members.length;
+  var dupCount = findDuplicateGroups().length;
+  $("mem-dups-btn").textContent = "Possible duplicates" + (dupCount ? " (" + dupCount + ")" : "");
+  if (!$("mem-dups").hidden) renderDuplicates();
+  if (!state.members.length) { list.appendChild(emptyState("No one has registered yet", "People appear here after they register on the public page.")); $("mem-more").hidden = true; return; }
+  if (!rows.length) { list.appendChild(emptyState("No one matches these filters", "Try clearing a filter or checking the spelling.")); $("mem-more").hidden = true; return; }
+  list.appendChild(h("table", { class: "table table-members" },
+    h("thead", null, h("tr", null, ["Name", "Gender", "Level", "Department", "Category", "Registered"].map(function (t) { return h("th", { text: t }); }))),
+    h("tbody", null, rows.slice(0, mem.shown).map(function (m) {
+      return h("tr", null,
+        h("td", { "data-label": "Name" }, h("button", { type: "button", class: "link-btn name-btn", text: m.full_name, on: { click: function () { openMemberDialog(m.id); } } }),
+          m.phone ? h("span", { class: "muted small block", text: m.phone }) : null),
+        h("td", { "data-label": "Gender", text: m.gender }), h("td", { "data-label": "Level", text: m.level }), h("td", { "data-label": "Department", text: m.department }),
+        h("td", { "data-label": "Category" }, categoryPill(m.category)), h("td", { "data-label": "Registered", text: fmtDate(m.registered_on) }));
+    }))));
+  var more = $("mem-more"); more.hidden = rows.length <= mem.shown; more.textContent = "Show more (" + (rows.length - mem.shown) + " left)";
+}
+
+function renderDuplicates() {
+  var box = clear($("mem-dups")), groups = findDuplicateGroups();
+  box.appendChild(h("p", { class: "muted small", text: "These records share a phone number or a name. Only you can tell whether they are really the same person. " +
+    (state.isAdmin ? "If they are, choose the record to keep. The other record's attendance moves across." : "An administrator can merge real duplicates.") }));
+  if (!groups.length) { box.appendChild(h("p", { class: "ok-text", text: "No possible duplicates found." })); return; }
+  groups.forEach(function (g) {
+    box.appendChild(h("div", { class: "dup-group" },
+      h("p", { class: "small" }, h("strong", { text: plural(g.members.length, "record") }), " · " + g.reasons.join(" and ")),
+      g.members.map(function (m) {
+        return h("div", { class: "dup-row" },
+          h("div", null, h("strong", { text: m.full_name }), h("span", { class: "muted small block", text: [m.phone || "no phone", m.level, m.department, "registered " + fmtDate(m.registered_on)].join(" · ") })),
+          state.isAdmin ? h("button", { type: "button", class: "btn btn-secondary btn-sm", text: "Keep this one", on: { click: function () { mergeInto(g, m); } } }) : null);
+      }),
+      h("button", { type: "button", class: "link-btn small", text: "These are different people", on: { click: function () { dismissGroup(g.key); renderMembers(); } } })));
+  });
+}
+
+async function mergeInto(group, keep) {
+  var others = group.members.filter(function (m) { return m.id !== keep.id; });
+  var ok = await confirmDialog("Merge " + plural(others.length, "record") + " into " + keep.full_name + "?",
+    others.map(function (o) { return o.full_name; }).join(", ") + " will be merged into this record. Their attendance moves across, and the extra record is hidden. This cannot be undone from the app.", "Merge", true);
+  if (!ok) return;
+  try {
+    for (var i = 0; i < others.length; i++) await rpc("admin_merge_members", { p_keep: keep.id, p_remove: others[i].id });
+    await loadMembers(true); renderMembers(); toast("Records merged.");
+  } catch (ex) { toast(ex.message, "error"); }
+}
+
+async function openMemberDialog(id) {
+  var m = state.membersById[id]; if (!m) return;
+  var dlg = h("dialog", { class: "dlg dlg-wide", "aria-labelledby": "member-title" });
+  var body = h("div");
+  dlg.appendChild(body);
+  dlg.addEventListener("close", function () { dlg.remove(); });
+  document.body.appendChild(dlg); dlg.showModal();
+
+  function dlgRow(label, value) { return h("div", { class: "kv" }, h("dt", { text: label }), h("dd", { text: value || "–" })); }
+  async function showDetails() {
+    m = state.membersById[id];
+    clear(body);
+    body.appendChild(h("div", { class: "dlg-head" }, h("div", null, h("h2", { id: "member-title", text: m.full_name }), categoryPill(m.category)),
+      h("button", { type: "button", class: "icon-btn", "aria-label": "Close", on: { click: function () { dlg.close(); } } }, icon('<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>'))));
+    body.appendChild(h("dl", { class: "kvs" }, dlgRow("Phone", m.phone), dlgRow("Level", m.level), dlgRow("Department", m.department), dlgRow("Gender", m.gender),
+      dlgRow("Registered", fmtDate(m.registered_on)), m.original_category !== m.category ? dlgRow("Registered as", m.original_category) : null));
+    var attBox = h("div", { class: "att-summary" }, h("p", { class: "muted", text: "Loading attendance…" }));
+    body.appendChild(h("h3", { text: "Attendance" })); body.appendChild(attBox);
+    if (state.isAdmin) body.appendChild(h("div", { class: "dlg-actions" }, h("button", { type: "button", class: "btn btn-secondary", text: "Edit details", on: { click: showEdit } })));
+    try {
+      var year = +todayISO().slice(0, 4), yb = yearBounds(year);
+      var r = await Promise.all([rpc("member_attendance_summary", { p_member: id }), rpc("member_attendance_summary", { p_member: id, p_from: yb.from, p_to: yb.to }), rpc("member_history", { p_member: id })]);
+      clear(attBox);
+      function summary(label, s) {
+        return h("div", { class: "stat" }, h("span", { class: "stat-value", text: s.total ? fmtPct(s.rate) : "–" }), h("span", { class: "stat-label", text: label }),
+          h("span", { class: "stat-hint", text: s.total ? s.present + "/" + s.total + " services attended" : "No services yet" }));
+      }
+      attBox.appendChild(h("div", { class: "stats stats-3" }, summary("Attendance rate, all time", r[0]), summary("Attendance rate, " + year, r[1])));
+      attBox.appendChild(h("p", { class: "muted small", text: "Rate = services attended ÷ services counted since they registered. Anyone not marked within 24 hours of a service counts as absent." }));
+      var hist = r[2] || [];
+      if (!hist.length) attBox.appendChild(h("p", { class: "muted", text: "No attendance has been marked for this person yet." }));
+      else attBox.appendChild(h("ul", { class: "history" }, hist.slice(0, 30).map(function (x) {
+        return h("li", null, h("span", { text: fmtDate(x.service_date) + " · " + x.title }), h("span", { class: "pill pill-" + x.status, text: x.status === "present" ? "Present" : (x.auto ? "Absent (automatic)" : "Absent") }));
+      })));
+      if (hist.length > 30) attBox.appendChild(h("p", { class: "muted small", text: "Showing the latest 30 of " + hist.length + "." }));
+    } catch (ex) { clear(attBox); showBox(attBox, "Could not load attendance: " + ex.message); }
+  }
+  function showEdit() {
+    clear(body);
+    var f = {
+      name: h("input", { id: "ed-name", type: "text", maxlength: "120", value: m.full_name }),
+      phone: h("input", { id: "ed-phone", type: "tel", maxlength: "25", value: m.phone || "" }),
+      level: h("select", { id: "ed-level" }, h("option", { value: m.level, text: m.level }), config.LEVELS.filter(function (l) { return l !== m.level; }).map(function (l) { return h("option", { value: l, text: l }); })),
+      dept: h("input", { id: "ed-dept", type: "text", maxlength: "120", value: m.department }),
+      gender: h("select", { id: "ed-gender" }, GENDERS.map(function (g) { return h("option", { value: g, text: g }); })),
+      cat: h("select", { id: "ed-cat" }, CATEGORIES.map(function (c) { return h("option", { value: c, text: c }); }))
+    };
+    f.gender.value = m.gender; f.cat.value = m.category;
+    var err = h("div", { class: "alert alert-error", role: "alert", hidden: true });
+    function field(label, id, el) { return h("div", { class: "field" }, h("label", { for: id, text: label }), el); }
+    var form = h("form", { novalidate: true },
+      h("h2", { text: "Edit details" }), err,
+      field("Full name", "ed-name", f.name), field("Phone number", "ed-phone", f.phone), field("Level", "ed-level", f.level), field("Department", "ed-dept", f.dept),
+      field("Gender", "ed-gender", f.gender), field("Category (current)", "ed-cat", f.cat),
+      h("p", { class: "muted small", text: "Changing the category here does not change what they registered as. Reports keep both." }),
+      h("div", { class: "dlg-actions" }, h("button", { type: "button", class: "btn btn-secondary", text: "Cancel", on: { click: showDetails } }), h("button", { type: "submit", class: "btn btn-primary", text: "Save changes" })));
+    form.addEventListener("submit", async function (e) {
+      e.preventDefault(); err.hidden = true;
+      var btn = form.querySelector("[type=submit]"); btn.disabled = true;
+      try {
+        await rpc("admin_update_member", { p_member: id, p_full_name: f.name.value, p_level: f.level.value, p_phone: f.phone.value, p_department: f.dept.value, p_gender: f.gender.value, p_category: f.cat.value });
+        await loadMembers(true); renderMembers(); toast("Details saved."); showDetails();
+      } catch (ex) { showBox(err, ex.message); btn.disabled = false; }
+    });
+    body.appendChild(form);
+  }
+  showDetails();
+}
+
+async function initMembers() {
+  if (!mem.built) buildMembersShell();
+  var list = $("mem-list");
+  if (!state.members) { clear(list).appendChild(h("p", { class: "muted", text: "Loading…" })); }
+  try { await loadMembers(false); renderMembers(); } catch (ex) { clear(list); showBox(list.appendChild(h("div")), ex.message); }
+}
+
+// ---------------------------------------------------------------- 6. REPORTS AND DOWNLOADS (administrators)
+var rep = { built: false, data: null };
+
+function reportRange() {
+  var type = $("rep-type").value;
+  if (type === "month") return monthBounds(+$("rep-year").value, +$("rep-month").value);
+  if (type === "year") return yearBounds(+$("rep-year").value);
+  return { from: $("rep-from").value, to: $("rep-to").value };
+}
+function rangeLabel(r) { return fmtDate(r.from) + " to " + fmtDate(r.to); }
+function reportFileBase(r) {
+  var type = $("rep-type").value;
+  if (type === "month") return "RCF-Attendance-" + r.from.slice(0, 7);
+  if (type === "year") return "RCF-Attendance-" + r.from.slice(0, 4);
+  return "RCF-Attendance-" + r.from + "_to_" + r.to;
+}
+
+function buildReportsShell() {
+  var view = clear($("view-reports")), t = todayISO(), nowY = +t.slice(0, 4), nowM = +t.slice(5, 7);
+  var typeSel = h("select", { id: "rep-type" }, h("option", { value: "month", text: "A month" }), h("option", { value: "year", text: "A full year" }), h("option", { value: "custom", text: "Custom dates" }));
+  var monthSel = h("select", { id: "rep-month", "aria-label": "Month" }, MONTH_NAMES.map(function (n, i) { return h("option", { value: String(i + 1), text: n }); }));
+  var yearSel = h("select", { id: "rep-year", "aria-label": "Year" });
+  for (var y = nowY + 1; y >= nowY - 6; y--) yearSel.appendChild(h("option", { value: String(y), text: String(y) }));
+  monthSel.value = String(nowM); yearSel.value = String(nowY);
+  var catSel = h("select", { id: "rep-cat", "aria-label": "Category filter" }, h("option", { value: "", text: "All categories" }), CATEGORIES.map(function (c) { return h("option", { value: c, text: c }); }));
+  var levelSel = h("select", { id: "rep-level", "aria-label": "Level filter" }, h("option", { value: "", text: "All levels" }), config.LEVELS.map(function (l) { return h("option", { value: l, text: l }); }));
+  var customBox = h("div", { id: "rep-custom", class: "inline-fields", hidden: true },
+    h("label", { class: "date-field" }, h("span", { text: "From" }), h("input", { id: "rep-from", type: "date" })),
+    h("label", { class: "date-field" }, h("span", { text: "To" }), h("input", { id: "rep-to", type: "date" })));
+  typeSel.addEventListener("change", function () {
+    customBox.hidden = typeSel.value !== "custom"; monthSel.hidden = typeSel.value !== "month"; yearSel.hidden = typeSel.value === "custom";
+  });
+  view.appendChild(h("div", { class: "card" },
+    h("h2", { text: "Choose a period" }),
+    h("div", { class: "filters" },
+      h("div", { class: "field" }, h("label", { for: "rep-type", text: "Report for" }), typeSel),
+      h("div", { class: "field" }, h("label", { class: "sr-label", for: "rep-month", text: "Month" }), monthSel),
+      h("div", { class: "field" }, h("label", { class: "sr-label", for: "rep-year", text: "Year" }), yearSel), customBox),
+    h("details", { class: "details-inline" }, h("summary", { text: "Filters for the individual list (optional)" }),
+      h("div", { class: "filters" }, h("div", { class: "field" }, catSel), h("div", { class: "field" }, levelSel)),
+      h("label", { class: "check" }, h("input", { id: "rep-phone", type: "checkbox", checked: true }), " Show phone numbers in the report and downloads"),
+      h("p", { class: "muted small", text: "These apply to the Individual Attendance list and its downloads. The summary always covers everyone." })),
+    h("button", { id: "rep-go", type: "button", class: "btn btn-primary", text: "Generate report", on: { click: generateReport } }),
+    h("div", { id: "rep-error", class: "alert alert-error", role: "alert", hidden: true })));
+  view.appendChild(h("div", { id: "rep-out" }));
+  $("rep-phone").addEventListener("change", function () { if (rep.data) renderReportPreview(); });
+  rep.built = true;
+}
+
+function filteredPeople() {
+  var cat = $("rep-cat").value, level = $("rep-level").value;
+  return rep.data.people.filter(function (p) { return (!cat || p.category === cat) && (!level || p.level === level); });
+}
+
+async function generateReport() {
+  var err = $("rep-error"), out = clear($("rep-out")), btn = $("rep-go");
+  err.hidden = true;
+  var range = reportRange();
+  if (!range.from || !range.to || range.to < range.from) { showBox(err, "Please choose both a start date and an end date (the end date cannot be before the start date)."); return; }
+  btn.disabled = true; btn.textContent = "Generating…";
+  out.appendChild(h("p", { class: "muted", text: "Building your report…" }));
+  try {
+    var r = await Promise.all([
+      rpc("report_summary", { p_from: range.from, p_to: range.to }),
+      rpc("report_by_service", { p_from: range.from, p_to: range.to }),
+      rpcAll("report_by_person", { p_from: range.from, p_to: range.to })
+    ]);
+    rep.data = { range: range, summary: r[0], services: r[1] || [], people: r[2] || [], by: state.profile.full_name, filenameBase: reportFileBase(range), type: $("rep-type").value };
+    renderReportPreview();
+  } catch (ex) { clear(out); showBox(err, ex.message); }
+  btn.disabled = false; btn.textContent = "Generate report";
+}
+
+function reportTable(headers, rows, opts) {
+  opts = opts || {};
+  return h("table", { class: "table" }, h("thead", null, h("tr", null, headers.map(function (t, i) { return h("th", { text: t, class: (opts.right && opts.right.indexOf(i) !== -1) ? "num" : null }); }))),
+    h("tbody", null, rows.map(function (r) {
+      return h("tr", { class: r.total ? "row-total" : null }, (r.total ? r.cells : r).map(function (c, i) {
+        return h("td", { "data-label": headers[i], class: (opts.right && opts.right.indexOf(i) !== -1) ? "num" : null, text: c === null || c === undefined ? "" : String(c) });
+      }));
+    })));
+}
+
+function genderCount(list, label) { var f = (list || []).filter(function (x) { return x.label === label; })[0]; return f ? f.count : 0; }
+function genderSummaryRows(s) {
+  var pg = s.present_entries_by_gender || {}, ag = s.absent_entries_by_gender || {}, ug = s.unique_attendees_by_gender || [];
+  return [
+    ["Present entries: Male", pg.Male || 0], ["Present entries: Female", pg.Female || 0],
+    ["Absent entries: Male", ag.Male || 0], ["Absent entries: Female", ag.Female || 0],
+    ["People who attended: Male", genderCount(ug, "Male")], ["People who attended: Female", genderCount(ug, "Female")]
+  ];
+}
+// Totals for the individual list: how many people, how many of each gender, and the Present / Absent sums
+function peopleTotals(people) {
+  var t = { n: people.length, m: 0, f: 0, o: 0, p: 0, a: 0 };
+  people.forEach(function (x) { if (x.gender === "Male") t.m++; else if (x.gender === "Female") t.f++; else t.o++; t.p += x.attended; t.a += x.absent_n; });
+  t.rate = t.p + t.a > 0 ? t.p / (t.p + t.a) : null;
+  t.frac = t.p + t.a > 0 ? t.p + "/" + (t.p + t.a) : "–";
+  t.genders = "Male " + t.m + " · Female " + t.f + (t.o ? " · Other " + t.o : "");
+  return t;
+}
+function summaryRows(d) {
+  var s = d.summary;
+  var avg = s.services_taken > 0 ? Math.round(s.present_entries / s.services_taken * 10) / 10 : 0;
+  return [
+    ["Services held", s.services], ["Services where attendance was taken", s.services_taken],
+    ["Total attendance (Present entries)", s.present_entries], ["Average present per service", avg],
+    ["Absent (marked, plus not marked within 24 hours)", s.absent_entries], ["People who attended (counted once)", s.unique_attendees]
+  ].concat(genderSummaryRows(s), [
+    ["Total registered (up to end of period)", s.registered_total], ["New registrations in this period", s.registered_in_period]
+  ], s.services_open > 0 ? [["Services still open for marking", s.services_open]] : []);
+}
+
+function renderReportPreview() {
+  var d = rep.data, s = d.summary, out = clear($("rep-out"));
+  var people = filteredPeople();
+  out.appendChild(h("div", { class: "card export-bar" },
+    h("div", null, h("h2", { text: "Report for " + rangeLabel(d.range) }), h("p", { class: "muted small", text: "Download this report:" })),
+    h("div", { class: "export-actions" },
+      h("button", { type: "button", class: "btn btn-primary", text: "Excel (.xlsx)", on: { click: function () { exportExcel(); } } }),
+      h("button", { type: "button", class: "btn btn-primary", text: "PDF", on: { click: function () { exportPdf(); } } }),
+      h("span", { class: "csv-group" },
+        h("label", { class: "sr-label", for: "csv-which", text: "CSV contents" }),
+        h("select", { id: "csv-which" }, h("option", { value: "people", text: "CSV: Individual attendance" }), h("option", { value: "services", text: "CSV: Attendance by service" }), h("option", { value: "summary", text: "CSV: Summary" })),
+        h("button", { type: "button", class: "btn btn-secondary", text: "Download CSV", on: { click: function () { exportCsv(); } } })))));
+
+  if (s.services === 0) out.appendChild(h("div", { class: "card" }, emptyState("No services in this period", "There are no services between these dates, so there is no attendance to report.")));
+
+  out.appendChild(h("div", { class: "card" }, h("h2", { text: "Summary" }), reportTable(["Measure", "Value"], summaryRows(d), { right: [1] }),
+    h("p", { class: "muted small", text: "Total attendance counts every Present entry. People who attended counts each person once. Absent includes anyone not marked within 24 hours of a service. A service still open for marking does not count anyone as absent yet." })));
+
+  var totals = { present: 0, absent: 0, ft: 0, nc: 0, mb: 0, pm: 0, pf: 0, am: 0, af: 0 };
+  var svcRows = d.services.map(function (x) {
+    totals.present += x.present; totals.absent += x.absent; totals.ft += x.first_timers; totals.nc += x.new_converts; totals.mb += x.members;
+    totals.pm += x.present_male; totals.pf += x.present_female; totals.am += x.absent_male; totals.af += x.absent_female;
+    return [fmtDate(x.service_date), svcTitle(x), x.present, x.present_male, x.present_female, x.absent, x.absent_male, x.absent_female, x.first_timers, x.new_converts, x.members];
+  });
+  if (svcRows.length) svcRows.push({ total: true, cells: ["Total", "", totals.present, totals.pm, totals.pf, totals.absent, totals.am, totals.af, totals.ft, totals.nc, totals.mb] });
+  out.appendChild(h("div", { class: "card" }, h("h2", { text: "Attendance by service" }),
+    svcRows.length ? reportTable(SVC_HEADERS, svcRows, { right: [2, 3, 4, 5, 6, 7, 8, 9, 10] }) : h("p", { class: "muted", text: "No services in this period." })));
+
+  var uc = s.unique_attendees_by_category, pc = s.present_entries_by_category, rc = s.registered_in_period_by_category;
+  out.appendChild(h("div", { class: "card" }, h("h2", { text: "Category breakdown" }),
+    h("h3", { text: "People who attended (by current category)" }),
+    reportTable(["Category", "People", "Present entries"], CATEGORIES.map(function (c) { return [c, uc[c], pc[c]]; }), { right: [1, 2] }),
+    h("h3", { text: "New registrations in this period (category chosen at registration)" }),
+    reportTable(["Category", "People"], CATEGORIES.map(function (c) { return [c, rc[c]]; }), { right: [1] }),
+    s.unique_attendees_by_level.length ? [h("h3", { text: "People who attended, by level" }), reportTable(["Level", "People"], s.unique_attendees_by_level.map(function (x) { return [x.label, x.count]; }), { right: [1] })] : null,
+    s.unique_attendees_by_gender.length ? [h("h3", { text: "By gender" }), reportTable(["Gender", "People"], s.unique_attendees_by_gender.map(function (x) { return [x.label, x.count]; }), { right: [1] })] : null,
+    s.unique_attendees_by_department.length ? [h("h3", { text: "By department" }), reportTable(["Department", "People"], s.unique_attendees_by_department.map(function (x) { return [x.label, x.count]; }), { right: [1] })] : null));
+
+  var shown = people.slice(0, 100), pt = peopleTotals(people), ph = $("rep-phone").checked;
+  out.appendChild(h("div", { class: "card" }, h("h2", { text: "Individual attendance" }),
+    h("p", { class: "muted small", text: "Attended = times present out of services counted (for example 3/5). A service counts for someone if attendance was taken at it, it was on or after the day they registered, and its 24-hour marking window has ended. Anyone not marked in that time counts as absent." }),
+    people.length ? reportTable(["Name"].concat(ph ? ["Phone"] : [], ["Gender", "Level", "Category", "Present", "Absent", "Attended", "Rate"]),
+      shown.map(function (p) { return [p.full_name].concat(ph ? [p.phone || "–"] : [], [p.gender, p.level, p.category, p.attended, p.absent_n, fraction(p), fmtPct(p.attendance_rate)]); })
+        .concat([{ total: true, cells: ["Total · " + plural(pt.n, "person", "people")].concat(ph ? [""] : [], [pt.genders, "", "", pt.p, pt.a, pt.frac, fmtPct(pt.rate)]) }]), { right: ph ? [5, 6, 7, 8] : [4, 5, 6, 7] })
+      : h("p", { class: "muted", text: "No one matches these filters." }),
+    people.length > shown.length ? h("p", { class: "muted small", text: "Showing the first " + shown.length + " of " + people.length + ". Downloads include everyone." }) : null));
+}
+
+var SVC_HEADERS = ["Date", "Service", "Present", "Male present", "Female present", "Absent", "Male absent", "Female absent", "First Timers", "New Converts", "Members"];
+function fraction(p) { return p.total_services > 0 ? p.attended + "/" + p.total_services : "–"; }   // e.g. 3/5 = came 3 times out of 5 services
+function svcTitle(x) { return x.title + (x.is_open ? " (marking still open)" : ""); }
+function personRowCells(p, withPhone) {
+  var C = RCFLib.C;
+  return [C.text(p.full_name)].concat(withPhone ? [C.text(p.phone || "")] : [], [C.text(p.level), C.text(p.department), C.text(p.gender), C.text(p.category), C.text(p.original_category),
+    C.date(p.registered_on), C.num(p.attended), C.num(p.absent_n), C.text(fraction(p)), C.pct(p.attendance_rate)]);
+}
+function personHeaders(withPhone) {
+  return ["Name"].concat(withPhone ? ["Phone"] : [], ["Level", "Department", "Gender", "Category (current)", "Category at registration", "Registered", "Present", "Absent", "Attended (present/services)", "Attendance rate"]);
+}
+// The church logo, fetched from the site as the original picture (never redrawn, so it stays sharp). Null if unavailable.
+var logoCache;
+async function loadLogo() {
+  if (logoCache !== undefined) return logoCache;
+  logoCache = null;
+  try {
+    var res = await fetch("logo.jpg", { cache: "force-cache" });
+    if (res.ok) {
+      var bytes = new Uint8Array(await res.arrayBuffer());
+      if (RCFLib.jpegInfo(bytes)) logoCache = { bytes: bytes };
+    }
+  } catch (e) {}
+  return logoCache;
+}
+function generatedStamp(d) { return "Generated " + fmtDate(todayISO()) + " by " + d.by; }
+
+async function exportExcel() {
+  var logo = await loadLogo();
+  var d = rep.data, s = d.summary, C = RCFLib.C, withPhone = $("rep-phone").checked, people = filteredPeople();
+  var summary = (logo ? [[], [], [], [], []] : []).concat([   // blank rows leave room for the logo at the top-left
+    [C.title("RCF Attendance Report")], [C.text("Redeem Christian Fellowship · House of God's Revealed Glory")],
+    [C.bold("Period"), C.text(rangeLabel(d.range))], [C.bold("Generated"), C.text(generatedStamp(d).replace("Generated ", ""))], [],
+    [C.head("Measure"), C.head("Value")]
+  ]);
+  summaryRows(d).forEach(function (r) { summary.push([C.text(r[0]), typeof r[1] === "number" && r[0].indexOf("Average") === 0 ? C.dec(r[1]) : C.num(r[1])]); });
+  summary.push([], [C.bold("How the figures are worked out")],
+    [C.text("Total attendance = number of Present entries in the period.")], [C.text("People who attended = each person counted once if marked Present at least once.")],
+    [C.text("Absent = marked Absent, plus anyone not marked within 24 hours of the service (counted automatically).")],
+    [C.text("Attended = times present out of services counted, for example 3/5. Attendance rate = Present ÷ services counted.")],
+    [C.text("A service counts for a person if attendance was taken at it, it was on or after the day they registered, and its 24-hour marking window has ended.")]);
+  var svcRows = [SVC_HEADERS.map(function (x) { return C.head(x); })];
+  var t = { p: 0, a: 0, f: 0, n: 0, m: 0, pm: 0, pf: 0, am: 0, af: 0 };
+  d.services.forEach(function (x) {
+    t.p += x.present; t.a += x.absent; t.f += x.first_timers; t.n += x.new_converts; t.m += x.members;
+    t.pm += x.present_male; t.pf += x.present_female; t.am += x.absent_male; t.af += x.absent_female;
+    svcRows.push([C.date(x.service_date), C.text(svcTitle(x)), C.num(x.present), C.num(x.present_male), C.num(x.present_female), C.num(x.absent), C.num(x.absent_male), C.num(x.absent_female), C.num(x.first_timers), C.num(x.new_converts), C.num(x.members)]);
+  });
+  if (d.services.length) svcRows.push([C.totalText("Total"), C.totalText(""), C.totalNum(t.p), C.totalNum(t.pm), C.totalNum(t.pf), C.totalNum(t.a), C.totalNum(t.am), C.totalNum(t.af), C.totalNum(t.f), C.totalNum(t.n), C.totalNum(t.m)]);
+  var indRows = [personHeaders(withPhone).map(function (x) { return C.head(x); })];
+  people.forEach(function (p) { indRows.push(personRowCells(p, withPhone)); });
+  var pt = peopleTotals(people);
+  if (people.length) indRows.push([C.totalText("Total (" + plural(pt.n, "person", "people") + ")")].concat(withPhone ? [C.totalText("")] : [], [C.totalText(""), C.totalText(""), C.totalText(pt.genders), C.totalText(""), C.totalText(""), C.totalText(""),
+    C.totalNum(pt.p), C.totalNum(pt.a), C.totalText(pt.frac), C.totalText(fmtPct(pt.rate))]));
+  var uc = s.unique_attendees_by_category, pc = s.present_entries_by_category, rc = s.registered_in_period_by_category;
+  var cat = [[C.title("People who attended, by current category")], [C.head("Category"), C.head("People (counted once)"), C.head("Present entries")]];
+  CATEGORIES.forEach(function (c) { cat.push([C.text(c), C.num(uc[c]), C.num(pc[c])]); });
+  cat.push([], [C.title("New registrations in the period, by category at registration")], [C.head("Category"), C.head("People")]);
+  CATEGORIES.forEach(function (c) { cat.push([C.text(c), C.num(rc[c])]); });
+  [["People who attended, by level", "Level", s.unique_attendees_by_level], ["People who attended, by gender", "Gender", s.unique_attendees_by_gender], ["People who attended, by department", "Department", s.unique_attendees_by_department]].forEach(function (b) {
+    cat.push([], [C.title(b[0])], [C.head(b[1]), C.head("People")]);
+    b[2].forEach(function (x) { cat.push([C.text(x.label), C.num(x.count)]); });
+  });
+  var bytes = RCFLib.buildXlsx([
+    { name: d.type === "month" ? "Monthly Summary" : "Period Summary", widths: [52, 34], rows: summary },
+    { name: "Attendance by Service", widths: [14, 34, 10, 14, 15, 10, 13, 14, 13, 14, 11], freezeRows: 1, rows: svcRows },
+    { name: "Individual Attendance", widths: withPhone ? [30, 16, 14, 24, 28, 18, 22, 14, 10, 10, 16, 14] : [30, 14, 24, 28, 18, 22, 14, 10, 10, 16, 14], freezeRows: 1, rows: indRows },
+    { name: "Category Breakdown", widths: [48, 22, 16], rows: cat }
+  ], logo);
+  downloadBlob(d.filenameBase + ".xlsx", new Blob([bytes], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }));
+  toast("Excel file downloaded.");
+}
+
+function exportCsv() {
+  var d = rep.data, which = $("csv-which").value, withPhone = $("rep-phone").checked, rows, name;
+  if (which === "services") {
+    rows = [SVC_HEADERS.slice()];
+    d.services.forEach(function (x) { rows.push([x.service_date, svcTitle(x), x.present, x.present_male, x.present_female, x.absent, x.absent_male, x.absent_female, x.first_timers, x.new_converts, x.members]); });
+    name = d.filenameBase + "-by-service.csv";
+  } else if (which === "summary") {
+    rows = [["Measure", "Value"]].concat(summaryRows(d)); name = d.filenameBase + "-summary.csv";
+  } else {
+    rows = [personHeaders(withPhone).map(function (x) { return x === "Attendance rate" ? "Attendance rate (%)" : x; })];
+    filteredPeople().forEach(function (p) {
+      rows.push([p.full_name].concat(withPhone ? [p.phone || ""] : [], [p.level, p.department, p.gender, p.category, p.original_category, p.registered_on, p.attended, p.absent_n, p.total_services > 0 ? p.attended + " of " + p.total_services : "",
+        p.attendance_rate === null ? "" : Math.round(p.attendance_rate * 1000) / 10]));
+    });
+    name = d.filenameBase + "-individual.csv";
+  }
+  downloadBlob(name, new Blob([RCFLib.toCsv(rows)], { type: "text/csv;charset=utf-8" }));
+  toast("CSV file downloaded.");
+}
+
+async function exportPdf() {
+  var logo = await loadLogo();
+  var d = rep.data, s = d.summary, people = filteredPeople(), withPhone = $("rep-phone").checked;
+  var tot = { p: 0, a: 0, f: 0, n: 0, m: 0, pm: 0, pf: 0, am: 0, af: 0 };
+  var svcRows = d.services.map(function (x) {
+    tot.p += x.present; tot.a += x.absent; tot.f += x.first_timers; tot.n += x.new_converts; tot.m += x.members;
+    tot.pm += x.present_male; tot.pf += x.present_female; tot.am += x.absent_male; tot.af += x.absent_female;
+    return [fmtDate(x.service_date), svcTitle(x), String(x.present), String(x.present_male), String(x.present_female), String(x.absent), String(x.absent_male), String(x.absent_female), String(x.first_timers), String(x.new_converts), String(x.members)];
+  });
+  if (svcRows.length) svcRows.push({ bold: true, cells: ["Total", "", String(tot.p), String(tot.pm), String(tot.pf), String(tot.a), String(tot.am), String(tot.af), String(tot.f), String(tot.n), String(tot.m)] });
+  var pt = peopleTotals(people);
+  var uc = s.unique_attendees_by_category, pc = s.present_entries_by_category, rc = s.registered_in_period_by_category;
+  var indCols = [{ header: "Name", width: 4 }].concat(withPhone ? [{ header: "Phone", width: 2 }] : [], [{ header: "Gender", width: 1.3 }, { header: "Level", width: 1.6 }, { header: "Department", width: 2.4 }, { header: "Category", width: 1.5 },
+    { header: "Present", width: 1, align: "right" }, { header: "Absent", width: 1, align: "right" }, { header: "Attended", width: 1.1, align: "right" }, { header: "Rate", width: 1, align: "right" }]);
+  var bytes = RCFLib.buildPdf({
+    logo: logo, orientation: "landscape", title: "Attendance Report", subtitle: "Period: " + rangeLabel(d.range) + " · Times in " + config.TIMEZONE, generated: generatedStamp(d),
+    sections: [
+      { heading: "Summary", columns: [{ header: "Measure", width: 4 }, { header: "Value", width: 1, align: "right" }], rows: summaryRows(d).map(function (r) { return [r[0], String(r[1])]; }),
+        note: "Absent includes anyone not marked within 24 hours of a service. People who attended are counted once each." },
+      { heading: "Attendance by service", columns: [{ header: "Date", width: 1.6 }, { header: "Service", width: 3 }, { header: "Present", width: 1, align: "right" }, { header: "Male present", width: 1.3, align: "right" }, { header: "Female present", width: 1.5, align: "right" }, { header: "Absent", width: 1, align: "right" }, { header: "Male absent", width: 1.3, align: "right" }, { header: "Female absent", width: 1.5, align: "right" }, { header: "First Timers", width: 1.3, align: "right" }, { header: "New Converts", width: 1.4, align: "right" }, { header: "Members", width: 1.1, align: "right" }], rows: svcRows },
+      { heading: "Category breakdown", note: "Attendance uses each person's current category. Registrations use the category chosen when they registered.",
+        columns: [{ header: "Category", width: 3 }, { header: "People who attended", width: 2, align: "right" }, { header: "Present entries", width: 2, align: "right" }, { header: "New registrations", width: 2, align: "right" }],
+        rows: CATEGORIES.map(function (c) { return [c, String(uc[c]), String(pc[c]), String(rc[c])]; }) },
+      { heading: "Individual attendance", note: "Attended = times present out of services counted (e.g. 3/5). Rate = Present ÷ services counted. Not marked within 24 hours counts as absent.", columns: indCols,
+        rows: people.map(function (p) {
+          return [p.full_name].concat(withPhone ? [p.phone || ""] : [], [p.gender, p.level, p.department, p.category, String(p.attended), String(p.absent_n), fraction(p), fmtPct(p.attendance_rate)]);
+        }).concat(people.length ? [{ bold: true, cells: ["Total · " + plural(pt.n, "person", "people")].concat(withPhone ? [""] : [], [pt.genders, "", "", "", String(pt.p), String(pt.a), pt.frac, fmtPct(pt.rate)]) }] : []) }
+    ]
+  });
+  downloadBlob(d.filenameBase + ".pdf", new Blob([bytes], { type: "application/pdf" }));
+  toast("PDF downloaded.");
+}
+
+async function initReports() { if (!rep.built) buildReportsShell(); }
+
+// ---------------------------------------------------------------- 7. QR CODE AND LINK
+var QR_KEY = "rcf-registration-url";
+var qrState = { built: false, qr: null, url: "" };
+
+function defaultRegistrationUrl() { return new URL("./", window.location.href).href; }
+function savedRegistrationUrl() { try { return localStorage.getItem(QR_KEY) || ""; } catch (e) { return ""; } }
+
+function currentQrUrl() {
+  var base = ($("qr-url").value || "").trim();
+  return $("qr-direct").checked && base && base.indexOf("#") === -1 ? base + "#register" : base;
+}
+
+function drawQr() {
+  var box = clear($("qr-box")), msg = $("qr-msg"), url = currentQrUrl();
+  msg.hidden = true; qrState.qr = null;
+  ["qr-copy", "qr-open", "qr-png", "qr-svg", "qr-print"].forEach(function (id) { $(id).disabled = true; });
+  if (!/^https?:\/\/[^\s]+$/i.test(url)) { showBox(msg, "Enter the full web address of your registration page, starting with https://", "info"); return; }
+  var warn = null;
+  if (/^http:\/\/(localhost|127\.)/i.test(url)) warn = "This address only works on this computer. Use your live GitHub Pages address so visitors can open it.";
+  else if (/^http:\/\//i.test(url)) warn = "This address is not secure (http). Use https:// if your site supports it.";
+  try { qrState.qr = RCFLib.qrEncode(url, "M"); } catch (e) { showBox(msg, e.message); return; }
+  if (warn) showBox(msg, warn, "info");
+  box.innerHTML = RCFLib.qrToSvg(qrState.qr, { border: 2, dark: "#0d1b2e", light: "#ffffff" }); // our own generated SVG, no user text inside
+  box.firstChild.setAttribute("role", "img"); box.firstChild.setAttribute("aria-label", "QR code for " + url);
+  qrState.url = url;
+  ["qr-copy", "qr-open", "qr-png", "qr-svg", "qr-print"].forEach(function (id) { $(id).disabled = false; });
+  $("qr-print-url").textContent = url;
+}
+
+function buildQrShell() {
+  var view = clear($("view-qr")), saved = savedRegistrationUrl();
+  view.appendChild(h("div", { class: "card" },
+    h("h2", { text: "Registration link" }),
+    h("p", { class: "muted", text: "Visitors scan this code (or open the link) to reach the public registration page. It does not give them access to the dashboard." }),
+    h("div", { class: "field" }, h("label", { for: "qr-url", text: "Registration page address" }),
+      h("input", { id: "qr-url", type: "url", value: saved || defaultRegistrationUrl(), autocomplete: "off", spellcheck: "false" }),
+      h("p", { class: "muted small", text: "Filled in from this site's address. Change it here if your public address is different." })),
+    h("label", { class: "check" }, h("input", { id: "qr-direct", type: "checkbox" }), " Open the registration form directly (skip the welcome screen)"),
+    h("div", { class: "toolbar-actions" },
+      h("button", { type: "button", class: "btn btn-secondary btn-sm", text: "Save this address", on: { click: function () { try { localStorage.setItem(QR_KEY, $("qr-url").value.trim()); toast("Address saved on this device."); } catch (e) { toast("Could not save on this device.", "error"); } } } }),
+      h("button", { type: "button", class: "btn btn-secondary btn-sm", text: "Reset", on: { click: function () { $("qr-url").value = defaultRegistrationUrl(); try { localStorage.removeItem(QR_KEY); } catch (e) {} drawQr(); } } })),
+    h("div", { id: "qr-msg", class: "alert", role: "status", hidden: true })));
+  view.appendChild(h("div", { class: "card qr-card", id: "qr-print" },
+    h("img", { class: "qr-logo", src: "logo.jpg", alt: "", width: "72", height: "72" }),
+    h("p", { class: "eyebrow", text: "Redeem Christian Fellowship" }), h("h2", { class: "print-only-title", text: "Scan to register" }),
+    h("p", { class: "muted print-sub", text: "House of God's Revealed Glory" }),
+    h("div", { id: "qr-box", class: "qr-box" }), h("p", { id: "qr-print-url", class: "small qr-url" }),
+    h("div", { class: "qr-actions no-print" },
+      h("button", { id: "qr-copy", type: "button", class: "btn btn-primary", text: "Copy link", on: { click: copyQrLink } }),
+      h("button", { id: "qr-open", type: "button", class: "btn btn-secondary", text: "Test the link", on: { click: function () { window.open(qrState.url, "_blank", "noopener"); } } }),
+      h("button", { id: "qr-png", type: "button", class: "btn btn-secondary", text: "Download PNG", on: { click: downloadQrPng } }),
+      h("button", { id: "qr-svg", type: "button", class: "btn btn-secondary", text: "Download SVG", on: { click: function () { downloadBlob("RCF-registration-qr.svg", new Blob([RCFLib.qrToSvg(qrState.qr, { border: 4 })], { type: "image/svg+xml" })); } } }),
+      h("button", { id: "qr-print", type: "button", class: "btn btn-secondary", text: "Print", on: { click: function () { window.print(); } } }))));
+  view.appendChild(h("div", { class: "card no-print" }, h("h2", { text: "If your address changes" }),
+    h("ol", { class: "steps" },
+      h("li", { text: "Type the new address in the box above." }), h("li", { text: "Download or print the new QR code." }),
+      h("li", { text: "Replace every old printed code. Old codes keep pointing to the old address." }))));
+  $("qr-url").addEventListener("input", drawQr); $("qr-direct").addEventListener("change", drawQr);
+  qrState.built = true;
+}
+async function copyQrLink() {
+  try { await navigator.clipboard.writeText(qrState.url); toast("Link copied."); }
+  catch (e) { var i = $("qr-url"); i.focus(); i.select(); toast("Press Ctrl+C (or tap Copy) to copy the selected address."); }
+}
+function downloadQrPng() {
+  var qr = qrState.qr, border = 4, scale = Math.max(4, Math.floor(1024 / (qr.size + border * 2))), dim = (qr.size + border * 2) * scale;
+  var canvas = h("canvas", { width: dim, height: dim }), ctx = canvas.getContext("2d");
+  ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, dim, dim); ctx.fillStyle = "#0d1b2e";
+  for (var y = 0; y < qr.size; y++) for (var x = 0; x < qr.size; x++) if (qr.modules[y][x]) ctx.fillRect((x + border) * scale, (y + border) * scale, scale, scale);
+  canvas.toBlob(function (blob) { if (blob) downloadBlob("RCF-registration-qr.png", blob); else toast("Could not make the PNG.", "error"); }, "image/png");
+}
+async function initQr() { if (!qrState.built) buildQrShell(); drawQr(); }
+
+// ---------------------------------------------------------------- 8. WORKERS (administrators)
+async function initWorkers() {
+  var view = clear($("view-workers"));
+  var err = h("div", { class: "alert alert-error", role: "alert", hidden: true });
+  var addErr = h("div", { class: "alert alert-error", role: "alert", hidden: true });
+  var listBox = h("div", null, h("p", { class: "muted", text: "Loading…" }));
+  var email = h("input", { id: "wk-email", type: "email", autocomplete: "off", inputmode: "email" });
+  var name = h("input", { id: "wk-name", type: "text", maxlength: "120", autocomplete: "off" });
+  var role = h("select", { id: "wk-role" }, h("option", { value: "worker", text: "Attendance worker" }), h("option", { value: "admin", text: "Administrator" }));
+  var addForm = h("form", { novalidate: true }, addErr,
+    h("div", { class: "form-grid" },
+      h("div", { class: "field" }, h("label", { for: "wk-email", text: "Their email" }), email),
+      h("div", { class: "field" }, h("label", { for: "wk-name", text: "Their name" }), name),
+      h("div", { class: "field" }, h("label", { for: "wk-role", text: "Role" }), role)),
+    h("button", { type: "submit", class: "btn btn-primary", text: "Give access" }));
+  addForm.addEventListener("submit", async function (e) {
+    e.preventDefault(); addErr.hidden = true;
+    var btn = addForm.querySelector("[type=submit]"); btn.disabled = true;
+    try {
+      await rpc("admin_set_role", { p_email: email.value.trim(), p_full_name: name.value.trim(), p_role: role.value });
+      toast("Access given."); email.value = ""; name.value = ""; await load();
+    } catch (ex) { showBox(addErr, ex.message); }
+    btn.disabled = false;
+  });
+  view.appendChild(h("div", { class: "card" }, h("h2", { text: "Who has access" }), err, listBox));
+  view.appendChild(h("div", { class: "card" }, h("h2", { text: "Give someone access" }),
+    h("ol", { class: "steps" },
+      h("li", { text: "In Supabase, open Authentication → Users → Add user, and create their login (email and password). Tick “Auto Confirm User”." }),
+      h("li", { text: "Come back here, enter the same email and their name, choose a role, and press Give access." }),
+      h("li", { text: "Share their password with them privately. They sign in at the Staff Login page." })),
+    addForm,
+    h("p", { class: "muted small", text: "Attendance workers can mark attendance and view members. Administrators can also edit members, see reports, and manage workers. To reset someone's password, use Authentication → Users in Supabase." })));
+
+  async function setStaff(p, newRole, active, title, text, label, danger) {
+    if (!(await confirmDialog(title, text, label, danger))) return;
+    try { await rpc("admin_update_staff", { p_id: p.id, p_role: newRole, p_is_active: active }); toast("Saved."); await load(); }
+    catch (ex) { toast(ex.message, "error"); }
+  }
+  async function load() {
+    try {
+      var staff = (await rpc("admin_list_staff")) || [];
+      clear(listBox);
+      listBox.appendChild(h("table", { class: "table" },
+        h("thead", null, h("tr", null, ["Name", "Email", "Role", "Status", ""].map(function (t) { return h("th", { text: t }); }))),
+        h("tbody", null, staff.map(function (p) {
+          var me = p.id === state.user.id;
+          return h("tr", null,
+            h("td", { "data-label": "Name" }, h("strong", { text: p.full_name }), me ? h("span", { class: "pill pill-note", text: "You" }) : null),
+            h("td", { "data-label": "Email", text: p.email || "–" }),
+            h("td", { "data-label": "Role", text: p.role === "admin" ? "Administrator" : "Attendance worker" }),
+            h("td", { "data-label": "Status" }, h("span", { class: "pill " + (p.is_active ? "pill-present" : "pill-absent"), text: p.is_active ? "Active" : "No access" })),
+            h("td", { class: "row-actions" }, me ? null : [
+              h("button", { type: "button", class: "btn btn-secondary btn-sm", text: p.role === "admin" ? "Make worker" : "Make admin",
+                on: { click: function () { var nr = p.role === "admin" ? "worker" : "admin"; setStaff(p, nr, p.is_active, "Change role?", p.full_name + " will become " + (nr === "admin" ? "an administrator." : "an attendance worker."), "Change role", false); } } }),
+              h("button", { type: "button", class: "btn btn-secondary btn-sm", text: p.is_active ? "Remove access" : "Restore access",
+                on: { click: function () { setStaff(p, p.role, !p.is_active, p.is_active ? "Remove access?" : "Restore access?", p.is_active ? p.full_name + " will be signed out of the dashboard and will not be able to sign in." : p.full_name + " will be able to sign in again.", p.is_active ? "Remove access" : "Restore", p.is_active); } } })]));
+        }))));
+    } catch (ex) { clear(listBox); showBox(err, ex.message); }
+  }
+  await load();
+}
+
+// ---------------------------------------------------------------- 9. SETTINGS
+function displayName(profile) {
+  var n = String((profile && profile.full_name) || "").trim();
+  if (!n || n.indexOf("@") !== -1 || /^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(n)) return "";
+  return n;
+}
+function refreshHeaderUser() {
+  var n = displayName(state.profile), first = n ? n.split(/\s+/)[0] : "";
+  $("welcome").textContent = first ? "Welcome, " + first : "Welcome";
+  $("user-chip-name").textContent = n || "Your account";
+  $("user-chip-role").textContent = state.isAdmin ? "Admin" : "Worker";
+  $("user-chip-avatar").textContent = (first || "?").charAt(0).toUpperCase();
+}
+
+async function initSettings() {
+  var view = clear($("view-settings"));
+  var nameInput = h("input", { id: "set-name", type: "text", maxlength: "120", value: displayName(state.profile), autocomplete: "name" });
+  var nameMsg = h("div", { class: "alert", role: "status", hidden: true });
+  var nameForm = h("form", { novalidate: true }, nameMsg,
+    h("div", { class: "field" }, h("label", { for: "set-name", text: "Your name (shown in the dashboard)" }), nameInput),
+    h("button", { type: "submit", class: "btn btn-primary", text: "Save name" }));
+  if (!displayName(state.profile)) showBox(nameMsg, "Your name has not been set yet. Add it here so the dashboard can greet you properly.", "info");
+  nameForm.addEventListener("submit", async function (e) {
+    e.preventDefault(); nameMsg.hidden = true;
+    var btn = nameForm.querySelector("[type=submit]"); btn.disabled = true;
+    try {
+      await rpc("update_my_name", { p_name: nameInput.value });
+      state.profile.full_name = nameInput.value.trim(); refreshHeaderUser(); showBox(nameMsg, "Saved.", "success");
+    } catch (ex) { showBox(nameMsg, ex.message); }
+    btn.disabled = false;
+  });
+
+  var pw1 = h("input", { id: "set-pw1", type: "password", autocomplete: "new-password" }), pw2 = h("input", { id: "set-pw2", type: "password", autocomplete: "new-password" });
+  var pwMsg = h("div", { class: "alert", role: "status", hidden: true });
+  var pwForm = h("form", { novalidate: true }, pwMsg,
+    h("div", { class: "field" }, h("label", { for: "set-pw1", text: "New password" }), pw1, h("p", { class: "muted small", text: "At least 8 characters." })),
+    h("div", { class: "field" }, h("label", { for: "set-pw2", text: "Type it again" }), pw2),
+    h("button", { type: "submit", class: "btn btn-primary", text: "Change password" }));
+  pwForm.addEventListener("submit", async function (e) {
+    e.preventDefault(); pwMsg.hidden = true;
+    if (pw1.value.length < 8) { showBox(pwMsg, "Please use at least 8 characters."); return; }
+    if (pw1.value !== pw2.value) { showBox(pwMsg, "The two passwords do not match."); return; }
+    var btn = pwForm.querySelector("[type=submit]"); btn.disabled = true;
+    try {
+      var res = await client.auth.updateUser({ password: pw1.value });
+      if (res.error) throw new Error(res.error.message);
+      pw1.value = ""; pw2.value = ""; showBox(pwMsg, "Password changed.", "success");
+    } catch (ex) { showBox(pwMsg, ex.message); }
+    btn.disabled = false;
+  });
+
+  view.appendChild(h("div", { class: "card" }, h("h2", { text: "Your profile" }),
+    h("dl", { class: "kvs" }, h("div", { class: "kv" }, h("dt", { text: "Login email" }), h("dd", { text: state.user.email || "–" })),
+      h("div", { class: "kv" }, h("dt", { text: "Role" }), h("dd", { text: state.isAdmin ? "Administrator" : "Attendance worker" }))), nameForm));
+  view.appendChild(h("div", { class: "card" }, h("h2", { text: "Password" }), pwForm));
+  view.appendChild(h("div", { class: "card" }, h("h2", { text: "About" }),
+    h("dl", { class: "kvs" }, h("div", { class: "kv" }, h("dt", { text: "Church" }), h("dd", { text: "Redeem Christian Fellowship · House of God's Revealed Glory" })),
+      h("div", { class: "kv" }, h("dt", { text: "Dates and times use" }), h("dd", { text: config.TIMEZONE })))));
+}
+
+// ---------------------------------------------------------------- 10. START-UP
+function goToLogin(denied) { window.location.replace("login.html" + (denied ? "?denied=1" : "")); }
+
+(async function start() {
+  document.querySelectorAll(".year").forEach(function (el) { el.textContent = new Date().getFullYear(); });
+  // theme toggle
+  (function () {
+    var root = document.documentElement, button = $("theme-toggle");
+    function render(theme) { button.setAttribute("aria-label", theme === "dark" ? "Switch to light mode" : "Switch to dark mode"); }
+    render(root.getAttribute("data-theme") || "dark");
+    button.addEventListener("click", function () {
+      var next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+      root.setAttribute("data-theme", next);
+      try { localStorage.setItem("rcf-theme", next); } catch (e) {}
+      render(next);
+    });
+  })();
+  $("logout-btn").addEventListener("click", async function () { if (client) await client.auth.signOut(); goToLogin(false); });
+  $("menu-btn").addEventListener("click", function () { if ($("drawer").hidden) openDrawer(); else closeDrawer(); });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeDrawer(); });
+  $("drawer-backdrop").addEventListener("click", closeDrawer);
+
+  var fatal = $("fatal"), loading = $("loading");
+  function stop(message) { loading.hidden = true; fatal.textContent = message; fatal.hidden = false; }
+  if (!client) { stop("The dashboard is not set up yet. The site's Supabase settings are missing."); return; }
+
+  var session = await client.auth.getSession();
+  if (!session.data || !session.data.session) { goToLogin(false); return; }
+  state.user = session.data.session.user;
+
+  // The database decides who may enter. No active profile = no access.
+  var profile = await client.from("profiles").select("full_name, role, is_active").eq("id", state.user.id).maybeSingle();
+  if (profile.error || !profile.data || profile.data.is_active !== true) { await client.auth.signOut(); goToLogin(true); return; }
+  state.profile = profile.data;
+  state.isAdmin = profile.data.role === "admin";
+  await syncClock();
+
+  buildNav(); refreshHeaderUser();
+  document.body.classList.add("ready");
+  loading.hidden = true;
+  window.addEventListener("hashchange", showRoute);
+  client.auth.onAuthStateChange(function (event) { if (event === "SIGNED_OUT") goToLogin(false); });
+  showRoute();
+})();
+
+  </script>
+</body>
+</html>
