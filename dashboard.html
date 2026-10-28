@@ -1599,8 +1599,12 @@ function windowBanner(svc) {
   return h("div", { class: "att-banner att-banner-closed", role: "status" },
     h("strong", { text: "Service ended " + fmtStamp(svc.closes_at) + "." }),
     h("span", { text: nobodyMarked() ? " Attendance was never taken for this service, so it is not counted in reports." : " People who were not marked are counted absent. Only an administrator can change marks now." }),
-    state.isAdmin ? h("div", { style: "margin-top:8px" }, h("button", { type: "button", class: "btn btn-secondary btn-sm", text: "Reopen service", on: { click: function () { setServiceOpen(true); } } })) : null);
+    !state.isAdmin ? null : canReopen(svc)
+      ? h("div", { style: "margin-top:8px" }, h("button", { type: "button", class: "btn btn-secondary btn-sm", text: "Reopen service", on: { click: function () { setServiceOpen(true); } } }))
+      : h("p", { class: "muted small", style: "margin:8px 0 0", text: "This service ended more than 24 hours ago, so it can no longer be reopened." }));
 }
+// Reopening is allowed for 24 hours after the service ended (the database enforces the same rule)
+function canReopen(svc) { return nowMs() - Date.parse(svc.closes_at) < 24 * 3600 * 1000; }
 async function setServiceOpen(open) {
   var svc = currentService();
   if (!open && !(await confirmDialog("End this service?", "Marking will close. Everyone not marked present will be counted absent. You can reopen it later if you end it by mistake.", "End service", true))) return;
