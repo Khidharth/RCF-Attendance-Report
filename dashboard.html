@@ -330,9 +330,14 @@ main{min-width:0}
 .is-absent .lr-frac{color:var(--danger)}
 .lr-wait{margin:8px 0 0}
 @media print{
-  body.print-report *{visibility:hidden}
-  body.print-report #rep-out,body.print-report #rep-out *{visibility:visible}
-  body.print-report #rep-out{position:absolute;left:0;top:0;width:100%;background:#fff;color:#000}
+  /* always print the report in light colours, even when the dashboard is in dark mode (light text on white paper looks blank) */
+  html,body.print-report{background:#fff!important;height:auto!important;min-height:0!important;overflow:visible!important}
+  body.print-report{--bg:#fff;--surface:#fff;--surface-2:#f3f3f3;--text:#111;--text-muted:#444;--border:#bbb;--gold:#7a5d15;--gold-strong:#7a5d15;--gold-soft:#f1e9d2;--danger:#8a1f1f;--danger-bg:#fbeaea;--success:#25623a;--success-bg:#e8f3ea;color:#111;color-scheme:light}
+  body.print-report #print-root *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  body.print-report #print-root .muted{color:#444!important}
+  body.print-report > *:not(#print-root){display:none!important}
+  body.print-report #print-root,body.print-report #print-root *{visibility:visible}
+  body.print-report #print-root{display:block;position:static;width:100%;background:#fff;color:#111}
   body.print-report .lr-block{break-inside:avoid-page}
 }
 
@@ -2044,6 +2049,27 @@ async function generateReport() {
 }
 
 // ================= Custom report: present and absent lists =================
+// Prints a copy of the report on its own. The copy stays until the phone has finished printing
+// (a slow phone needs longer than a fixed delay, which is what made the printout blank).
+function printReport() {
+  var src = $("rep-out");
+  if (!src || !src.firstChild) return;
+  var root = document.createElement("div"), copy = src.cloneNode(true);
+  copy.removeAttribute("id"); root.id = "print-root"; root.appendChild(copy);
+  document.body.appendChild(root);
+  document.body.classList.add("print-report");
+  var finished = false;
+  function done() {
+    if (finished) return; finished = true;
+    window.removeEventListener("afterprint", done);
+    document.body.classList.remove("print-report");
+    if (root.parentNode) root.parentNode.removeChild(root);
+  }
+  window.addEventListener("afterprint", done);
+  setTimeout(function () { try { window.print(); } catch (e) { done(); } }, 150);
+  setTimeout(done, 10 * 60 * 1000);
+}
+
 var lrep = null;
 async function generateListReport(range) {
   var err = $("rep-error"), out = clear($("rep-out"));
@@ -2095,7 +2121,7 @@ function renderListReport() {
   var L = lrep, out = clear($("rep-out")), counted = L.svcs.filter(function (o) { return o.taken; });
   out.appendChild(h("div", { class: "card export-bar no-print" }, h("div", null, h("h2", { text: "Report for " + rangeLabel(L.range) }), h("p", { class: "muted small", text: "Present and absent names for each service." })),
     h("div", { class: "export-actions" },
-      h("button", { type: "button", class: "btn btn-primary", text: "Print / Save as PDF", on: { click: function () { document.body.classList.add("print-report"); window.print(); setTimeout(function () { document.body.classList.remove("print-report"); }, 500); } } }),
+      h("button", { type: "button", class: "btn btn-primary", text: "Print / Save as PDF", on: { click: printReport } }),
       h("button", { type: "button", class: "btn btn-secondary", text: "Download CSV", on: { click: exportListCsv } }))));
   if (!L.held) { out.appendChild(h("div", { class: "card" }, emptyState("No services in this period", "There are no services between these dates."))); return; }
   var card = h("div", { class: "card" });
