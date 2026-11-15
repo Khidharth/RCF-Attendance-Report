@@ -1225,7 +1225,11 @@ function nameKey(name) { return String(name || "").toLowerCase().replace(/[^a-z0
 async function loadMembers(force) {
   if (state.members && !force) return state.members;
   var rows = await rpcAll("list_members");
+  // the date each person was promoted from First Timer to Member (lets old services show the old category)
+  var promos = {};
+  try { (await rpcAll("list_promotions")).forEach(function (r) { promos[r.member_id] = r.promoted_on; }); } catch (e) { /* older database: no history yet */ }
   rows.forEach(function (m) {
+    m.promoted_on = promos[m.id] || null;
     m._name = nameKey(m.full_name);
     m._phone = phoneKey(m.phone);
     m._search = (m.full_name + " " + (m.phone || "") + " " + m._phone).toLowerCase();
@@ -2105,13 +2109,18 @@ async function generateListReport(range) {
 }
 // The Category and Level choices apply here: this returns a filtered copy of the generated report
 function filterText() { var c = $("rep-cat").value, l = $("rep-level").value; return (c || l) ? " · " + [c, l].filter(Boolean).join(" · ") : ""; }
+// The category a person had ON a given service date (a promoted Member was a First Timer before the promotion date)
+function catOn(m, iso) { return (m.promoted_on && m.category === "Member" && iso < m.promoted_on) ? "First Timer" : m.category; }
 function listView() {
   var cat = $("rep-cat").value, level = $("rep-level").value;
-  var ok = function (m) { return (!cat || m.category === cat) && (!level || m.level === level); };
+  var svcs = lrep.svcs.map(function (o) {
+    var d = o.sv.service_date, ok = function (m) { return (!cat || catOn(m, d) === cat) && (!level || m.level === level); };
+    return { sv: o.sv, taken: o.taken, open: o.open, present: o.present.filter(ok), absent: o.absent.filter(ok), waiting: o.waiting.filter(ok).length };
+  });
   var people = {};
-  Object.keys(lrep.people).forEach(function (id) { if (ok(lrep.people[id].m)) people[id] = lrep.people[id]; });
-  return { range: lrep.range, held: lrep.held, counted: lrep.counted, people: people,
-    svcs: lrep.svcs.map(function (o) { return { sv: o.sv, taken: o.taken, open: o.open, present: o.present.filter(ok), absent: o.absent.filter(ok), waiting: o.waiting.filter(ok).length }; }) };
+  function bump(m, key) { var x = people[m.id] || (people[m.id] = { m: m, p: 0, a: 0, n: 0 }); x[key]++; x.n++; }
+  svcs.forEach(function (o) { o.present.forEach(function (m) { bump(m, "p"); }); o.absent.forEach(function (m) { bump(m, "a"); }); });
+  return { range: lrep.range, held: lrep.held, counted: lrep.counted, people: people, svcs: svcs };
 }
 function byName(a, b) { return a.full_name.localeCompare(b.full_name); }
 function gcount(list, g) { return list.filter(function (m) { return m.gender === g; }).length; }
