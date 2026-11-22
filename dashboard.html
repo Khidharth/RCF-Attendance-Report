@@ -2007,15 +2007,20 @@ function buildReportsShell() {
   var customBox = h("div", { id: "rep-custom", class: "inline-fields", hidden: true },
     h("label", { class: "date-field" }, h("span", { text: "From" }), h("input", { id: "rep-from", type: "date" })),
     h("label", { class: "date-field" }, h("span", { text: "To" }), h("input", { id: "rep-to", type: "date" })));
+  // Custom dates only: pick one service (for days with two or more services) or all of them
+  var svcSel = h("select", { id: "rep-svc", "aria-label": "Service" }, h("option", { value: "", text: "All services in these dates" }));
+  var svcField = h("div", { id: "rep-svc-field", class: "field", hidden: true }, h("label", { for: "rep-svc", text: "Service" }), svcSel);
   typeSel.addEventListener("change", function () {
     customBox.hidden = typeSel.value !== "custom"; monthSel.hidden = typeSel.value !== "month"; yearSel.hidden = typeSel.value === "custom";
+    svcField.hidden = typeSel.value !== "custom";
+    if (typeSel.value === "custom") loadRepServices();
   });
   view.appendChild(h("div", { class: "card" },
     h("h2", { text: "Choose a period" }),
     h("div", { class: "filters" },
       h("div", { class: "field" }, h("label", { for: "rep-type", text: "Report for" }), typeSel),
       h("div", { class: "field" }, h("label", { class: "sr-label", for: "rep-month", text: "Month" }), monthSel),
-      h("div", { class: "field" }, h("label", { class: "sr-label", for: "rep-year", text: "Year" }), yearSel), customBox,
+      h("div", { class: "field" }, h("label", { class: "sr-label", for: "rep-year", text: "Year" }), yearSel), customBox, svcField,
       h("div", { class: "field" }, h("label", { for: "rep-cat", text: "Category" }), catSel),
       h("div", { class: "field" }, h("label", { for: "rep-level", text: "Level" }), levelSel)),
     h("details", { class: "details-inline" }, h("summary", { text: "More options" }),
@@ -2025,10 +2030,25 @@ function buildReportsShell() {
     h("div", { id: "rep-error", class: "alert alert-error", role: "alert", hidden: true })));
   view.appendChild(h("div", { id: "rep-out" }));
   $("rep-phone").addEventListener("change", function () { if (rep.data) renderReportPreview(); });
+  ["rep-from", "rep-to"].forEach(function (id) { $(id).addEventListener("change", loadRepServices); });
   ["rep-cat", "rep-level"].forEach(function (id) { $(id).addEventListener("change", function () {
     if ($("rep-type").value === "custom") { if (lrep) renderListReport(); } else if (rep.data) renderReportPreview();
   }); });
   rep.built = true;
+}
+
+// Fills the Service picker with the services between the chosen custom dates
+async function loadRepServices() {
+  var sel = $("rep-svc"), from = $("rep-from").value, to = $("rep-to").value, keep = sel.value;
+  while (sel.options.length > 1) sel.remove(1);
+  if (!from || !to || to < from) return;
+  try {
+    var list = ((await rpc("list_services", { p_from: from, p_to: to })) || []).slice().sort(function (a, b) {
+      return a.service_date < b.service_date ? -1 : a.service_date > b.service_date ? 1 : (a.title < b.title ? -1 : 1);
+    });
+    list.forEach(function (s) { sel.appendChild(h("option", { value: s.id, text: fmtDate(s.service_date) + " · " + s.title })); });
+    if (keep) sel.value = keep;
+  } catch (e) { /* the picker just stays on "All services" */ }
 }
 
 function filteredPeople() {
@@ -2084,6 +2104,8 @@ async function generateListReport(range) {
   try {
     var r = await Promise.all([rpc("list_services", { p_from: range.from, p_to: range.to }), loadMembers(true)]);
     var services = (r[0] || []).slice().sort(function (a, b) { return a.service_date < b.service_date ? -1 : a.service_date > b.service_date ? 1 : (a.title < b.title ? -1 : 1); });
+    var pick = $("rep-svc").value;   // one chosen service, or "" for all services in the dates
+    if (pick) services = services.filter(function (sv) { return sv.id === pick; });
     var marks = await Promise.all(services.map(function (sv) { return rpcAll("service_attendance", { p_service: sv.id }); }));
     var members = state.members, people = {}, svcs = [];
     members.forEach(function (m) { people[m.id] = { m: m, p: 0, a: 0, n: 0 }; });
