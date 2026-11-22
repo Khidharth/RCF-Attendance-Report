@@ -2010,9 +2010,17 @@ function buildReportsShell() {
   // Custom dates only: pick one service (for days with two or more services) or all of them
   var svcSel = h("select", { id: "rep-svc", "aria-label": "Service" }, h("option", { value: "", text: "All services in these dates" }));
   var svcField = h("div", { id: "rep-svc-field", class: "field", hidden: true }, h("label", { for: "rep-svc", text: "Service" }), svcSel);
+  // Order of the Present list (A-Z or first to arrive) and an optional range, e.g. no. 1 to 20, to reward early comers
+  var ordSel = h("select", { id: "rep-order", "aria-label": "Order of the present list" },
+    h("option", { value: "name", text: "A to Z (alphabetical)" }), h("option", { value: "arrival", text: "First to arrive (earliest first)" }));
+  var ordField = h("div", { id: "rep-ord-field", class: "field", hidden: true }, h("label", { for: "rep-order", text: "Present list order" }), ordSel);
+  var rangeField = h("div", { id: "rep-range-field", class: "field", hidden: true },
+    h("div", { class: "inline-fields" },
+      h("label", { class: "date-field" }, h("span", { text: "From no." }), h("input", { id: "rep-rfrom", type: "number", min: "1", inputmode: "numeric", placeholder: "1", style: "min-width:0;width:96px" })),
+      h("label", { class: "date-field" }, h("span", { text: "To no." }), h("input", { id: "rep-rto", type: "number", min: "1", inputmode: "numeric", placeholder: "e.g. 20", style: "min-width:0;width:96px" }))));
   typeSel.addEventListener("change", function () {
     customBox.hidden = typeSel.value !== "custom"; monthSel.hidden = typeSel.value !== "month"; yearSel.hidden = typeSel.value === "custom";
-    svcField.hidden = typeSel.value !== "custom";
+    svcField.hidden = ordField.hidden = rangeField.hidden = typeSel.value !== "custom";
     if (typeSel.value === "custom") loadRepServices();
   });
   view.appendChild(h("div", { class: "card" },
@@ -2020,7 +2028,7 @@ function buildReportsShell() {
     h("div", { class: "filters" },
       h("div", { class: "field" }, h("label", { for: "rep-type", text: "Report for" }), typeSel),
       h("div", { class: "field" }, h("label", { class: "sr-label", for: "rep-month", text: "Month" }), monthSel),
-      h("div", { class: "field" }, h("label", { class: "sr-label", for: "rep-year", text: "Year" }), yearSel), customBox, svcField,
+      h("div", { class: "field" }, h("label", { class: "sr-label", for: "rep-year", text: "Year" }), yearSel), customBox, svcField, ordField, rangeField,
       h("div", { class: "field" }, h("label", { for: "rep-cat", text: "Category" }), catSel),
       h("div", { class: "field" }, h("label", { for: "rep-level", text: "Level" }), levelSel)),
     h("details", { class: "details-inline" }, h("summary", { text: "More options" }),
@@ -2031,6 +2039,9 @@ function buildReportsShell() {
   view.appendChild(h("div", { id: "rep-out" }));
   $("rep-phone").addEventListener("change", function () { if (rep.data) renderReportPreview(); });
   ["rep-from", "rep-to"].forEach(function (id) { $(id).addEventListener("change", loadRepServices); });
+  ["rep-order", "rep-rfrom", "rep-rto"].forEach(function (id) { $(id).addEventListener("change", function () {
+    if ($("rep-type").value === "custom" && lrep) renderListReport();
+  }); });
   ["rep-cat", "rep-level"].forEach(function (id) { $(id).addEventListener("change", function () {
     if ($("rep-type").value === "custom") { if (lrep) renderListReport(); } else if (rep.data) renderReportPreview();
   }); });
@@ -2110,9 +2121,9 @@ async function generateListReport(range) {
     var members = state.members, people = {}, svcs = [];
     members.forEach(function (m) { people[m.id] = { m: m, p: 0, a: 0, n: 0 }; });
     services.forEach(function (sv, i) {
-      var map = {}; marks[i].forEach(function (x) { map[x.member_id] = x.status; });
+      var map = {}, at = {}; marks[i].forEach(function (x) { map[x.member_id] = x.status; at[x.member_id] = x.marked_at; });
       var taken = Object.keys(map).length > 0, open = svcIsOpen(sv);
-      var o = { sv: sv, taken: taken, open: open, present: [], absent: [], waiting: [] };
+      var o = { sv: sv, taken: taken, open: open, present: [], absent: [], waiting: [], at: at };
       if (taken) members.forEach(function (m) {
         var st = map[m.id];
         if (st === "present") o.present.push(m);
@@ -2137,17 +2148,33 @@ function listView() {
   var cat = $("rep-cat").value, level = $("rep-level").value;
   var svcs = lrep.svcs.map(function (o) {
     var d = o.sv.service_date, ok = function (m) { return (!cat || catOn(m, d) === cat) && (!level || m.level === level); };
-    return { sv: o.sv, taken: o.taken, open: o.open, present: o.present.filter(ok), absent: o.absent.filter(ok), waiting: o.waiting.filter(ok).length };
+    return { sv: o.sv, taken: o.taken, open: o.open, present: o.present.filter(ok), absent: o.absent.filter(ok), waiting: o.waiting.filter(ok).length, at: o.at };
   });
   var people = {};
   function bump(m, key) { var x = people[m.id] || (people[m.id] = { m: m, p: 0, a: 0, n: 0 }); x[key]++; x.n++; }
   svcs.forEach(function (o) { o.present.forEach(function (m) { bump(m, "p"); }); o.absent.forEach(function (m) { bump(m, "a"); }); });
   return { range: lrep.range, held: lrep.held, counted: lrep.counted, people: people, svcs: svcs };
 }
+function fmtClock(ts) {
+  return new Intl.DateTimeFormat("en-GB", { timeZone: config.TIMEZONE, hour: "2-digit", minute: "2-digit", second: "2-digit" }).format(new Date(ts));
+}
+// The Present list of one service: in A-Z or arrival order, then cut to the chosen range (numbers are positions in that order)
+function presentList(o) {
+  var order = $("rep-order").value, a = parseInt($("rep-rfrom").value, 10), b = parseInt($("rep-rto").value, 10);
+  var list = o.present.slice();
+  if (order === "arrival") {
+    list.sort(function (x, y) {
+      var tx = o.at && o.at[x.id] ? Date.parse(o.at[x.id]) : Infinity, ty = o.at && o.at[y.id] ? Date.parse(o.at[y.id]) : Infinity;
+      return (tx === ty ? 0 : tx < ty ? -1 : 1) || byName(x, y);
+    });
+  } else list.sort(byName);
+  var total = list.length, from = a > 0 ? a : 1, to = b > 0 ? Math.min(b, total) : total;
+  return { list: list.slice(from - 1, to), start: from, total: total, ranged: a > 0 || b > 0, order: order };
+}
 function byName(a, b) { return a.full_name.localeCompare(b.full_name); }
 function gcount(list, g) { return list.filter(function (m) { return m.gender === g; }).length; }
 // one Present / Absent block. frac(m) returns e.g. "2/5" or null (single service)
-function lrBlock(kind, list, frac, fracTitle) {
+function lrBlock(kind, list, frac, fracTitle, start) {
   var isP = kind === "present", head = isP ? "PRESENT" : "ABSENT";
   var box = h("div", { class: "lr-block is-" + kind },
     h("div", { class: "lr-head" }, h("span", { text: head + " · " + list.length }),
@@ -2156,7 +2183,7 @@ function lrBlock(kind, list, frac, fracTitle) {
   var heads = ["#", "Name", "Gender", "Department", "Number"].concat(frac ? [fracTitle] : []);
   box.appendChild(h("table", { class: "table" }, h("thead", null, h("tr", null, heads.map(function (t) { return h("th", { text: t }); }))),
     h("tbody", null, list.map(function (m, i) {
-      return h("tr", null, h("td", { "data-label": "#", text: String(i + 1) }), h("td", { "data-label": "Name", text: m.full_name }), h("td", { "data-label": "Gender", text: m.gender || "" }),
+      return h("tr", null, h("td", { "data-label": "#", text: String((start || 1) + i) }), h("td", { "data-label": "Name", text: m.full_name }), h("td", { "data-label": "Gender", text: m.gender || "" }),
         h("td", { "data-label": "Department", text: m.department || "" }), h("td", { "data-label": "Number", text: m.phone || "–" }),
         frac ? h("td", { "data-label": fracTitle, class: "lr-frac", text: frac(m) }) : null);
     }))));
@@ -2176,8 +2203,12 @@ function renderListReport() {
   if (L.held === 1) {
     var o = L.svcs[0];
     if (!o.taken) { card.appendChild(h("p", { class: "muted", text: "Attendance has not been taken for this service." })); return; }
+    var pl = presentList(o), byArrival = pl.order === "arrival";
     card.appendChild(lrTotals([o]));
-    card.appendChild(lrBlock("present", o.present.slice().sort(byName)));
+    if (byArrival || pl.ranged) card.appendChild(h("p", { class: "muted small lr-wait", text: pl.list.length
+      ? "Present list: showing no. " + pl.start + " to " + (pl.start + pl.list.length - 1) + " of " + pl.total + (byArrival ? ", in the order they arrived (earliest first)" : ", A to Z") + ". The totals table above counts everyone."
+      : "No one is in that range. " + pl.total + " present in all." }));
+    card.appendChild(lrBlock("present", pl.list, byArrival ? function (m) { return o.at && o.at[m.id] ? fmtClock(o.at[m.id]) : "–"; } : null, "Arrival time", pl.start));
     card.appendChild(lrBlock("absent", o.absent.slice().sort(byName)));
     if (o.waiting) card.appendChild(h("p", { class: "muted small lr-wait", text: o.waiting + " not marked yet. Marking is still open, so they are not counted as absent." }));
     return;
@@ -2186,6 +2217,7 @@ function renderListReport() {
   card.appendChild(h("div", { class: "stats stats-3" },
     h("div", { class: "stat" }, h("span", { class: "stat-value", text: String(L.held) }), h("span", { class: "stat-label", text: "Total services held" })),
     L.counted !== L.held ? h("div", { class: "stat" }, h("span", { class: "stat-value", text: String(L.counted) }), h("span", { class: "stat-label", text: "With attendance taken" })) : null));
+  if ($("rep-order").value === "arrival" || $("rep-rfrom").value || $("rep-rto").value) card.appendChild(h("p", { class: "muted small", text: "Arrival order and number ranges work for one service at a time. Pick a single service above to use them." }));
   card.appendChild(h("h3", { text: "Totals for each service" }));
   card.appendChild(lrTotals(counted, true));
   var N = counted.length;
@@ -2224,7 +2256,7 @@ function lrTotals(list, withDate) {
   return reportTable(heads, rows, { right: [1, 2, 3, 4, 5, 6] });
 }
 function exportListCsv() {
-  var L = listView(), rows = [["Service", "Date", "Status", "Name", "Gender", "Department", "Number"]];
+  var L = listView(), rows = [["Service", "Date", "Status", "Name", "Gender", "Department", "Number", "No.", "Arrival time"]];
   var multi = L.held > 1, N = L.svcs.filter(function (o) { return o.taken; }).length;
   if (multi) {
     rows = [["List", "Name", "Gender", "Department", "Number", "Count"]];
@@ -2234,8 +2266,9 @@ function exportListCsv() {
     ppl.filter(function (x) { return x.a; }).sort(function (a, b) { return b.a - a.a || byName(a.m, b.m); })
       .forEach(function (x) { rows.push(["Absent", x.m.full_name, x.m.gender, x.m.department, x.m.phone || "", x.a + "/" + N]); });
   } else L.svcs.forEach(function (o) {
-    o.present.slice().sort(byName).forEach(function (m) { rows.push([o.sv.title, o.sv.service_date, "Present", m.full_name, m.gender, m.department, m.phone || ""]); });
-    o.absent.slice().sort(byName).forEach(function (m) { rows.push([o.sv.title, o.sv.service_date, "Absent", m.full_name, m.gender, m.department, m.phone || ""]); });
+    var pl = presentList(o);
+    pl.list.forEach(function (m, i) { rows.push([o.sv.title, o.sv.service_date, "Present", m.full_name, m.gender, m.department, m.phone || "", pl.start + i, o.at && o.at[m.id] ? fmtClock(o.at[m.id]) : ""]); });
+    o.absent.slice().sort(byName).forEach(function (m) { rows.push([o.sv.title, o.sv.service_date, "Absent", m.full_name, m.gender, m.department, m.phone || "", "", ""]); });
   });
   var csv = "\ufeff" + rows.map(function (r) { return r.map(function (c) { return '"' + String(c == null ? "" : c).replace(/"/g, '""') + '"'; }).join(","); }).join("\r\n");
   var a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
