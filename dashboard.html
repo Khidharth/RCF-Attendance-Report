@@ -2299,7 +2299,7 @@ function renderListReport() {
   out.appendChild(h("div", { class: "card export-bar no-print" }, h("div", null, h("h2", { text: "Report for " + rangeLabel(L.range) }), h("p", { class: "muted small", text: "Present and absent names for each service." })),
     h("div", { class: "export-actions" },
       h("button", { type: "button", class: "btn btn-primary", text: "Print / Save as PDF", on: { click: printReport } }),
-      h("button", { type: "button", class: "btn btn-secondary", text: "Download CSV", on: { click: exportListCsv } }))));
+      h("button", { type: "button", class: "btn btn-secondary", text: "Download Excel", on: { click: exportListXlsx } }))));
   if (!L.held) { out.appendChild(h("div", { class: "card" }, emptyState("No services in this period", "There are no services between these dates."))); return; }
   var card = h("div", { class: "card" });
   out.appendChild(card);
@@ -2318,7 +2318,9 @@ function renderListReport() {
     if (o.waiting) card.appendChild(h("p", { class: "muted small lr-wait", text: o.waiting + " not marked yet. Marking is still open, so they are not counted as absent." }));
     return;
   }
-  // several services
+  // several services on one date (e.g. first and second service): no fractions, see renderDayReport
+  if (isOneDay(L)) { renderDayReport(card, L); return; }
+  // several services across different dates
   card.appendChild(h("div", { class: "stats stats-3" },
     h("div", { class: "stat" }, h("span", { class: "stat-value", text: String(L.held) }), h("span", { class: "stat-label", text: "Total services held" })),
     L.counted !== L.held ? h("div", { class: "stat" }, h("span", { class: "stat-value", text: String(L.counted) }), h("span", { class: "stat-label", text: "With attendance taken" })) : null));
@@ -2344,6 +2346,54 @@ function renderListReport() {
   });
   card.appendChild(det);
 }
+// ---- Two or more services on ONE date: no fractions. Present shows which service(s) each person attended;
+// Absent lists only people who attended none of that day's services.
+function isOneDay(L) { return L.held > 1 && L.svcs.every(function (o) { return o.sv.service_date === L.svcs[0].sv.service_date; }); }
+function dayData(L) {
+  var counted = L.svcs.filter(function (o) { return o.taken; }), att = {};
+  // the day's services are put in the order marking began (earliest mark first): that is the "first", "second"... service
+  function began(o) { var t = Object.keys(o.at || {}).map(function (k) { return Date.parse(o.at[k]); }).filter(function (v) { return !isNaN(v); }); return t.length ? Math.min.apply(null, t) : Infinity; }
+  counted.sort(function (a, b) { var x = began(a), y = began(b); return x === y ? (a.sv.title < b.sv.title ? -1 : 1) : (x < y ? -1 : 1); });
+  var ORD = ["First", "Second", "Third", "Fourth", "Fifth", "Sixth", "Seventh", "Eighth", "Ninth", "Tenth"], N = counted.length;
+  var named = counted.map(function (o, i) {
+    var name = i < ORD.length ? ORD[i] + " service" : "Service " + (i + 1);
+    return Object.assign({}, o, { sv: Object.assign({}, o.sv, { title: name, is_open: false }) });
+  });
+  named.forEach(function (o) { o.present.forEach(function (m) { (att[m.id] = att[m.id] || []).push(o.sv.title); }); });
+  var P = [], A = [];
+  Object.keys(L.people).forEach(function (id) { var x = L.people[id]; if (x.p) P.push(x.m); else if (x.a) A.push(x.m); });
+  P.sort(byName); A.sort(byName);
+  return { counted: counted, named: named, N: N, P: P, A: A, label: function (m) {
+    var t = att[m.id] || [];
+    if (N === 1) return t[0] || "";
+    return t.length === N ? (N === 2 ? "Both services" : "All " + N + " services") : t.join(" + ");
+  } };
+}
+function renderDayReport(card, L) {
+  var D = dayData(L);
+  card.appendChild(h("div", { class: "stats stats-3" },
+    h("div", { class: "stat" }, h("span", { class: "stat-value", text: String(L.held) }), h("span", { class: "stat-label", text: "Services held" })),
+    L.counted !== L.held ? h("div", { class: "stat" }, h("span", { class: "stat-value", text: String(L.counted) }), h("span", { class: "stat-label", text: "With attendance taken" })) : null));
+  if (!D.N) { card.appendChild(h("p", { class: "muted", text: "Attendance has not been taken for these services." })); return; }
+  var rto = $("rep-rto").value;
+  if ($("rep-order").value === "arrival" || $("rep-rfrom").value || (rto && rto !== "custom") || $("rep-rto-n").value) card.appendChild(h("p", { class: "muted small", text: "Arrival order and number ranges work for one service at a time. Pick a single service above to use them." }));
+  card.appendChild(h("h3", { text: "Totals for each service" }));
+  card.appendChild(lrTotals(D.named, false));
+  card.appendChild(h("h3", { text: "Who attended and who did not" }));
+  card.appendChild(h("p", { class: "muted small", text: "Present shows which service each person attended. Absent lists only people who attended none of this day's " + D.N + " services." }));
+  card.appendChild(lrBlock("present", D.P, function (m) { return D.label(m); }, "Attended"));
+  card.appendChild(lrBlock("absent", D.A));
+  var open = D.named.filter(function (o) { return o.open; });
+  if (open.length) card.appendChild(h("p", { class: "muted small lr-wait", text: "Marking is still open for " + open.map(function (o) { return o.sv.title; }).join(" and ") + ", so the absent list may still change." }));
+  var det = h("details", { class: "details-inline" }, h("summary", { text: "Names for each individual service (optional)" }));
+  D.named.forEach(function (o) {
+    var sec = h("div", { class: "lr-svc" }, h("h3", { text: svcTitle(o.sv) }), h("p", { class: "muted small", text: fmtDate(o.sv.service_date) }));
+    sec.appendChild(lrBlock("present", o.present.slice().sort(byName)));
+    sec.appendChild(lrBlock("absent", o.absent.slice().sort(byName)));
+    det.appendChild(sec);
+  });
+  card.appendChild(det);
+}
 function lrBlockPeople(kind, arr, totalFor) {
   var isP = kind === "present", map = {}, list = arr.map(function (x) { map[x.m.id] = x; return x.m; });
   return lrBlock(kind, list, function (m) { var x = map[m.id]; return (isP ? x.p : x.a) + "/" + totalFor(x); }, isP ? "Present" : "Absent");
@@ -2360,10 +2410,76 @@ function lrTotals(list, withDate) {
   if (list.length > 1) rows.push({ total: true, cells: ["Total", T.pm, T.pf, T.pm + T.pf, T.am, T.af, T.am + T.af] });
   return reportTable(heads, rows, { right: [1, 2, 3, 4, 5, 6] });
 }
+// Excel file of the custom report: a Summary sheet, a Present sheet and an Absent sheet (follows the same rules as the screen)
+async function exportListXlsx() {
+  var logo = await loadLogo();
+  var L = listView(), C = RCFLib.C, taken = L.svcs.filter(function (o) { return o.taken; }), N = taken.length;
+  var single = L.held === 1, oneDay = isOneDay(L), D = oneDay ? dayData(L) : null;
+  var totalsList, withDate = false, presentRows = [], absentRows = [], pHead = null, aHead = null, period;
+  if (single) {
+    var o1 = L.svcs[0], pl = presentList(o1);
+    totalsList = o1.taken ? [o1] : [];
+    pHead = pl.order === "arrival" ? "Arrival time" : null;
+    presentRows = pl.list.map(function (m, i) { return { no: pl.start + i, m: m, x: pHead ? (o1.at && o1.at[m.id] ? fmtClock(o1.at[m.id]) : "") : "" }; });
+    absentRows = o1.taken ? o1.absent.slice().sort(byName).map(function (m, i) { return { no: i + 1, m: m, x: "" }; }) : [];
+    period = fmtDate(o1.sv.service_date) + " · " + o1.sv.title;
+  } else if (oneDay) {
+    totalsList = D.named; pHead = "Attended";
+    presentRows = D.P.map(function (m, i) { return { no: i + 1, m: m, x: D.label(m) }; });
+    absentRows = D.A.map(function (m, i) { return { no: i + 1, m: m, x: "" }; });
+    period = fmtDate(L.svcs[0].sv.service_date) + " · " + plural(D.N, "service");
+  } else {
+    totalsList = taken; withDate = true; pHead = "Present"; aHead = "Absent";
+    var P = [], A = [];
+    Object.keys(L.people).forEach(function (id) { var x = L.people[id]; if (x.p) P.push(x); if (x.a) A.push(x); });
+    P.sort(function (a, b) { return b.p - a.p || byName(a.m, b.m); });
+    A.sort(function (a, b) { return b.a - a.a || byName(a.m, b.m); });
+    presentRows = P.map(function (x, i) { return { no: i + 1, m: x.m, x: x.p + "/" + N }; });
+    absentRows = A.map(function (x, i) { return { no: i + 1, m: x.m, x: x.a + "/" + N }; });
+    period = rangeLabel(L.range);
+  }
+  var T = { pm: 0, pf: 0, am: 0, af: 0 };
+  var trows = totalsList.map(function (o) {
+    var pm = gcount(o.present, "Male"), pf = gcount(o.present, "Female"), am = gcount(o.absent, "Male"), af = gcount(o.absent, "Female");
+    T.pm += pm; T.pf += pf; T.am += am; T.af += af;
+    return [C.text((withDate ? fmtDate(o.sv.service_date) + " · " : "") + o.sv.title), C.num(pm), C.num(pf), C.num(o.present.length), C.num(am), C.num(af), C.num(o.absent.length)];
+  });
+  if (totalsList.length > 1 && !oneDay) trows.push([C.totalText("Total"), C.totalNum(T.pm), C.totalNum(T.pf), C.totalNum(T.pm + T.pf), C.totalNum(T.am), C.totalNum(T.af), C.totalNum(T.am + T.af)]);
+  var ft = filterText().replace(/^ · /, "");
+  var summary = (logo ? [[], [], [], [], []] : []).concat([
+    [C.title("RCF Attendance Report")], [C.text("Redeemed Christian Fellowship · House of God's Revealed Glory")],
+    [C.bold("Report"), C.text(period)]
+  ], ft ? [[C.bold("Filter"), C.text(ft)]] : [], [
+    [C.bold("Generated"), C.text(generatedStamp({ by: state.profile.full_name }).replace("Generated ", ""))], [],
+    ["Service", "Male present", "Female present", "Total present", "Male absent", "Female absent", "Total absent"].map(function (x) { return C.head(x); })
+  ], trows);
+  if (oneDay) summary.push([], [C.bold("Came to at least one service"), C.num(D.P.length)], [C.bold("Came to no service"), C.num(D.A.length)],
+    [], [C.text("Absent = attended none of this day's services. The Attended column on the Present sheet says which service(s) each person came to.")]);
+  else if (!single) summary.push([], [C.text("Present and Absent sheets show how many of the " + N + " services each person attended (for example 2/" + N + ").")]);
+  function listRows(rows, head) {
+    var out = [["No.", "Name", "Gender", "Department", "Number"].concat(head ? [head] : []).map(function (x) { return C.head(x); })];
+    rows.forEach(function (r) { out.push([C.num(r.no), C.text(r.m.full_name), C.text(r.m.gender || ""), C.text(r.m.department || ""), C.text(r.m.phone || "")].concat(head ? [C.text(r.x)] : [])); });
+    if (!rows.length) out.push([C.text(""), C.text("Nobody")]);
+    return out;
+  }
+  var bytes = RCFLib.buildXlsx([
+    { name: "Summary", widths: [34, 14, 16, 14, 14, 15, 14], rows: summary },
+    { name: "Present", widths: [7, 32, 12, 26, 16, 18], freezeRows: 1, rows: listRows(presentRows, pHead) },
+    { name: "Absent", widths: [7, 32, 12, 26, 16, 14], freezeRows: 1, rows: listRows(absentRows, aHead) }
+  ], logo);
+  downloadBlob("RCF-Present-Absent-" + L.range.from + "_to_" + L.range.to + ".xlsx", new Blob([bytes], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }));
+  toast("Excel file downloaded.");
+}
+
 function exportListCsv() {
   var L = listView(), rows = [["Service", "Date", "Status", "Name", "Gender", "Department", "Number", "No.", "Arrival time"]];
   var multi = L.held > 1, N = L.svcs.filter(function (o) { return o.taken; }).length;
-  if (multi) {
+  if (isOneDay(L)) {
+    var D = dayData(L);
+    rows = [["List", "Name", "Gender", "Department", "Number", "Attended"]];
+    D.P.forEach(function (m) { rows.push(["Present", m.full_name, m.gender, m.department, m.phone || "", D.label(m)]); });
+    D.A.forEach(function (m) { rows.push(["Absent", m.full_name, m.gender, m.department, m.phone || "", ""]); });
+  } else if (multi) {
     rows = [["List", "Name", "Gender", "Department", "Number", "Count"]];
     var ppl = Object.keys(L.people).map(function (id) { return L.people[id]; });
     ppl.filter(function (x) { return x.p; }).sort(function (a, b) { return b.p - a.p || byName(a.m, b.m); })
