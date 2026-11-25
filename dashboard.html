@@ -2369,6 +2369,18 @@ function dayData(L) {
     return t.length === N ? (N === 2 ? "Both services" : "All " + N + " services") : t.join(" + ");
   } };
 }
+// Totals for a one-day report: present per service, then absent worked out from the people who came to none of the services
+function dayTotalRows(D) {
+  var sm = 0, sf = 0, st = 0;
+  var rows = D.named.map(function (o) {
+    var m = gcount(o.present, "Male"), f = gcount(o.present, "Female");
+    sm += m; sf += f; st += o.present.length;
+    return [o.sv.title + ": present", m, f, o.present.length];
+  });
+  rows.push({ total: true, cells: ["Present, services added up", sm, sf, st] });
+  rows.push({ total: true, cells: ["Absent: came to " + (D.N === 2 ? "neither service" : "none of the " + D.N + " services"), gcount(D.A, "Male"), gcount(D.A, "Female"), D.A.length] });
+  return rows;
+}
 function renderDayReport(card, L) {
   var D = dayData(L);
   card.appendChild(h("div", { class: "stats stats-3" },
@@ -2378,7 +2390,8 @@ function renderDayReport(card, L) {
   var rto = $("rep-rto").value;
   if ($("rep-order").value === "arrival" || $("rep-rfrom").value || (rto && rto !== "custom") || $("rep-rto-n").value) card.appendChild(h("p", { class: "muted small", text: "Arrival order and number ranges work for one service at a time. Pick a single service above to use them." }));
   card.appendChild(h("h3", { text: "Totals for each service" }));
-  card.appendChild(lrTotals(D.named, false));
+  card.appendChild(reportTable(["Totals", "Male", "Female", "Total"], dayTotalRows(D), { right: [1, 2, 3] }));
+  card.appendChild(h("p", { class: "muted small", text: "Absent is worked out from the people who came to no service at all, so it matches the Absent list below." }));
   card.appendChild(h("h3", { text: "Who attended and who did not" }));
   card.appendChild(h("p", { class: "muted small", text: "Present shows which service each person attended. Absent lists only people who attended none of this day's " + D.N + " services." }));
   card.appendChild(lrBlock("present", D.P, function (m) { return D.label(m); }, "Attended"));
@@ -2445,16 +2458,23 @@ async function exportListXlsx() {
     return [C.text((withDate ? fmtDate(o.sv.service_date) + " · " : "") + o.sv.title), C.num(pm), C.num(pf), C.num(o.present.length), C.num(am), C.num(af), C.num(o.absent.length)];
   });
   if (totalsList.length > 1 && !oneDay) trows.push([C.totalText("Total"), C.totalNum(T.pm), C.totalNum(T.pf), C.totalNum(T.pm + T.pf), C.totalNum(T.am), C.totalNum(T.af), C.totalNum(T.am + T.af)]);
+  var heads = ["Service", "Male present", "Female present", "Total present", "Male absent", "Female absent", "Total absent"];
+  if (oneDay) {   // one day: absent is worked out from the people who came to none of the services, so it matches the Absent sheet
+    heads = ["Totals", "Male", "Female", "Total"];
+    trows = dayTotalRows(D).map(function (r) {
+      var c = r.total ? r.cells : r;
+      return r.total ? [C.totalText(c[0]), C.totalNum(c[1]), C.totalNum(c[2]), C.totalNum(c[3])] : [C.text(c[0]), C.num(c[1]), C.num(c[2]), C.num(c[3])];
+    });
+  }
   var ft = filterText().replace(/^ · /, "");
   var summary = (logo ? [[], [], [], [], []] : []).concat([
     [C.title("RCF Attendance Report")], [C.text("Redeemed Christian Fellowship · House of God's Revealed Glory")],
     [C.bold("Report"), C.text(period)]
   ], ft ? [[C.bold("Filter"), C.text(ft)]] : [], [
     [C.bold("Generated"), C.text(generatedStamp({ by: state.profile.full_name }).replace("Generated ", ""))], [],
-    ["Service", "Male present", "Female present", "Total present", "Male absent", "Female absent", "Total absent"].map(function (x) { return C.head(x); })
+    heads.map(function (x) { return C.head(x); })
   ], trows);
-  if (oneDay) summary.push([], [C.bold("Came to at least one service"), C.num(D.P.length)], [C.bold("Came to no service"), C.num(D.A.length)],
-    [], [C.text("Absent = attended none of this day's services. The Attended column on the Present sheet says which service(s) each person came to.")]);
+  if (oneDay) summary.push([], [C.text("Absent = attended none of this day's services, so it matches the Absent sheet. The Attended column on the Present sheet says which service(s) each person came to.")]);
   else if (!single) summary.push([], [C.text("Present and Absent sheets show how many of the " + N + " services each person attended (for example 2/" + N + ").")]);
   function listRows(rows, head) {
     var out = [["No.", "Name", "Gender", "Department", "Number"].concat(head ? [head] : []).map(function (x) { return C.head(x); })];
